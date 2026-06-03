@@ -16,6 +16,8 @@ Ethical AI MY is a comprehensive, publicly available reference for responsible a
 
 This is a **reference document**, not a mandate. It is offered as guidance for stakeholders who wish to align their AI initiatives with ethical principles.
 
+**Acknowledgment:** This reference aligns with initiatives by ONSA 2025, CPC, dan RMC MCMC in advancing responsible AI governance in Malaysia.
+
 ---
 
 ## Governance Diagram
