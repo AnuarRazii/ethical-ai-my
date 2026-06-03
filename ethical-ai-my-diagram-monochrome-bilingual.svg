@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 800" width="1000" height="800">
+  <defs>
+    <style>
+      .title { font-size: 24px; font-weight: bold; fill: #2c3e50; }
+      .subtitle { font-size: 14px; fill: #34495e; }
+      .box-title { font-size: 16px; font-weight: bold; fill: #2c3e50; }
+      .box-text { font-size: 12px; fill: #34495e; }
+      .principle-text { font-size: 11px; fill: #555; }
+      .box { stroke: #3498db; stroke-width: 2; fill: #ecf0f1; }
+      .connector { stroke: #3498db; stroke-width: 2; fill: none; }
+      .center-box { stroke: #2c3e50; stroke-width: 2; fill: #e8f4f8; }
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <text x="500" y="40" text-anchor="middle" class="title">Ethical AI MY - Governance Model</text>
+  <text x="500" y="65" text-anchor="middle" class="subtitle">Non-Centralized Decision-Making Structure</text>
+
+  <!-- Top tier: Core Principles -->
+  <rect x="50" y="100" width="250" height="100" class="box" rx="5"/>
+  <text x="175" y="130" text-anchor="middle" class="box-title">Ethical Framework</text>
+  <text x="175" y="155" text-anchor="middle" class="principle-text">• Fairness</text>
+  <text x="175" y="175" text-anchor="middle" class="principle-text">• Transparency</text>
+  <text x="175" y="195" text-anchor="middle" class="principle-text">• Accountability</text>
+
+  <rect x="375" y="100" width="250" height="100" class="box" rx="5"/>
+  <text x="500" y="130" text-anchor="middle" class="box-title">Governance Model</text>
+  <text x="500" y="155" text-anchor="middle" class="principle-text">• Non-Centralized</text>
+  <text x="500" y="175" text-anchor="middle" class="principle-text">• Autonomous</text>
+  <text x="500" y="195" text-anchor="middle" class="principle-text">• Aligned</text>
+
+  <rect x="700" y="100" width="250" height="100" class="box" rx="5"/>
+  <text x="825" y="130" text-anchor="middle" class="box-title">Security Standards</text>
+  <text x="825" y="155" text-anchor="middle" class="principle-text">• Data Protection</text>
+  <text x="825" y="175" text-anchor="middle" class="principle-text">• Risk Management</text>
+  <text x="825" y="195" text-anchor="middle" class="principle-text">• Compliance</text>
+
+  <!-- Connectors from top tier to center -->
+  <line x1="175" y1="200" x2="300" y2="280" class="connector"/>
+  <line x1="500" y1="200" x2="500" y2="280" class="connector"/>
+  <line x1="825" y1="200" x2="700" y2="280" class="connector"/>
+
+  <!-- Central Hub -->
+  <rect x="300" y="280" width="400" height="120" class="center-box" rx="10"/>
+  <text x="500" y="310" text-anchor="middle" class="box-title">Shared Ethical Principles</text>
+  <text x="500" y="335" text-anchor="middle" class="box-text">Alignment Through Common Values</text>
+  <text x="500" y="360" text-anchor="middle" class="box-text">Transparent Communication • Mutual Accountability</text>
+  <text x="500" y="380" text-anchor="middle" class="box-text">Collaborative Problem-Solving</text>
+
+  <!-- Connectors from center to stakeholders -->
+  <line x1="350" y1="400" x2="150" y2="480" class="connector"/>
+  <line x1="450" y1="400" x2="350" y2="480" class="connector"/>
+  <line x1="550" y1="400" x2="650" y2="480" class="connector"/>
+  <line x1="650" y1="400" x2="850" y2="480" class="connector"/>
+
+  <!-- Stakeholder boxes -->
+  <!-- Organizations -->
+  <rect x="25" y="480" width="250" height="130" class="box" rx="5"/>
+  <text x="150" y="510" text-anchor="middle" class="box-title">Organizations</text>
+  <text x="150" y="535" text-anchor="middle" class="box-text">• Deploy AI ethically</text>
+  <text x="150" y="555" text-anchor="middle" class="box-text">• Impact assessment</text>
+  <text x="150" y="575" text-anchor="middle" class="box-text">• Transparent reporting</text>
+  <text x="150" y="595" text-anchor="middle" class="box-text">• Governance structures</text>
+
+  <!-- Development Teams -->
+  <rect x="275" y="480" width="250" height="130" class="box" rx="5"/>
+  <text x="400" y="510" text-anchor="middle" class="box-title">Development Teams</text>
+  <text x="400" y="535" text-anchor="middle" class="box-text">• Build ethically</text>
+  <text x="400" y="555" text-anchor="middle" class="box-text">• Security & testing</text>
+  <text x="400" y="575" text-anchor="middle" class="box-text">• Documentation</text>
+  <text x="400" y="595" text-anchor="middle" class="box-text">• Implementation</text>
+
+  <!-- Research -->
+  <rect x="525" y="480" width="250" height="130" class="box" rx="5"/>
+  <text x="650" y="510" text-anchor="middle" class="box-title">Research Institutions</text>
+  <text x="650" y="535" text-anchor="middle" class="box-text">• Advance knowledge</text>
+  <text x="650" y="555" text-anchor="middle" class="box-text">• Validate frameworks</text>
+  <text x="650" y="575" text-anchor="middle" class="box-text">• Contribute insights</text>
+  <text x="650" y="595" text-anchor="middle" class="box-text">• Share learning</text>
+
+  <!-- Communities -->
+  <rect x="775" y="480" width="200" height="130" class="box" rx="5"/>
+  <text x="875" y="510" text-anchor="middle" class="box-title">Communities</text>
+  <text x="875" y="535" text-anchor="middle" class="box-text">• Advocate interests</text>
+  <text x="875" y="555" text-anchor="middle" class="box-text">• Provide feedback</text>
+  <text x="875" y="575" text-anchor="middle" class="box-text">• Hold accountable</text>
+  <text x="875" y="595" text-anchor="middle" class="box-text">• Participate</text>
+
+  <!-- Bottom section: Key Mechanisms -->
+  <rect x="50" y="680" width="900" height="100" class="box" rx="5"/>
+  <text x="500" y="710" text-anchor="middle" class="box-title">Governance Mechanisms</text>
+  <text x="140" y="740" text-anchor="middle" class="box-text">• Transparency &amp; Documentation</text>
+  <text x="340" y="740" text-anchor="middle" class="box-text">• Ethical Review</text>
+  <text x="530" y="740" text-anchor="middle" class="box-text">• Community Engagement</text>
+  <text x="750" y="740" text-anchor="middle" class="box-text">• Escalation &amp; Resolution</text>
+  <text x="500" y="765" text-anchor="middle" class="box-text">• Mutual Accountability • Continuous Improvement</text>
+
+  <!-- Legend -->
+  <line x1="50" y1="30" x2="50" y2="30" class="connector" stroke-width="3"/>
+  <text x="55" y="35" class="subtitle">Alignment Flow</text>
+</svg>
