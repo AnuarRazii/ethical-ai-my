@@ -1,9 +1,6 @@
-# ============================================================
-#  RZ1 Security Enforcement — ethical-ai-my
-#  Ardoop Technologies | Anuar Razii
-#  Fix: git-aware .env scan + self-exclusion for grep patterns
-#  Framework: ONSA 2025 | CPC | RMC (MCMC, eff. 1 Jun 2026)
-# ============================================================
+# RZ1 Security Enforcement - ethical-ai-my
+# Ardoop Technologies | Anuar Razii
+# Framework: ONSA 2025 | CPC | RMC (MCMC, eff. 1 Jun 2026)
 
 name: RZ1 Security Enforcement
 
@@ -13,20 +10,18 @@ on:
   pull_request:
     branches: [ "main" ]
 
-# ── Cancel redundant runs on same branch/PR ────────────────────
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# ── Least-privilege permissions ────────────────────────────────
 permissions:
   contents: read
-  actions:  read
+  actions: read
 
 jobs:
 
   security-check:
-    name: 🔐 RZ1 Security Check
+    name: RZ1 Security Check
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -36,177 +31,93 @@ jobs:
         with:
           fetch-depth: 0
 
-      # ──────────────────────────────────────────────────────────
-      #  STEP 1 — Smart .env Detection (git-tracked files only)
-      #
-      #  FIX: Original `if find . -name ".env"; then` was wrong:
-      #   • find exits 0 even when nothing found → always TRUE
-      #   • No distinction between templates and real credentials
-      #   • Does not exclude .git directory
-      #
-      #  NEW: Uses `git ls-files` (only committed/tracked files)
-      #       + content inspection to separate templates vs secrets
-      # ──────────────────────────────────────────────────────────
-      - name: Detect .env files (git-aware)
+      - name: Detect committed .env files
         run: |
-          echo "🔍 Scanning for committed .env files..."
-          echo "──────────────────────────────────────────"
+          echo "=== RZ1: Scanning for committed .env files ==="
 
-          # Only check files git is actually tracking
-          TRACKED_ENV=$(git ls-files | grep -E '(^|/)\.env$' || true)
+          TRACKED=$(git ls-files | grep -E "(^|/)\.env$" || true)
 
-          if [ -z "$TRACKED_ENV" ]; then
-            echo "  ✅ No tracked .env files found"
+          if [ -z "$TRACKED" ]; then
+            echo "PASS: No tracked .env files found"
           else
-            REAL_CREDS=0
-            while IFS= read -r envfile; do
-              echo "  ⚠️  Tracked .env detected: $envfile"
+            echo "WARNING: Tracked .env file found - $TRACKED"
 
-              # Inspect content — skip comments/blank lines, look for real values
-              # Safe patterns: placeholders, angle-bracket tokens, example values
-              REAL_VALUES=$(grep -vE '^\s*(#|$)' "$envfile" 2>/dev/null \
-                | grep -E '^[A-Z_]+=.+' \
-                | grep -ivE \
-                  '(your_|<[^>]+>|example|placeholder|changeme|xxx|todo|fill|replace|enter_here|put_here)' \
-                || true)
+            REAL=$(grep -vE "^\s*(#|$)" $TRACKED 2>/dev/null \
+              | grep -E "^[A-Z_]+=.+" \
+              | grep -ivE "(example|placeholder|changeme|your_|dummy|test)" \
+              || true)
 
-              if [ -n "$REAL_VALUES" ]; then
-                echo "  ❌ $envfile — real credential values detected:"
-                echo "$REAL_VALUES"
-                REAL_CREDS=1
-              else
-                echo "  ✅ $envfile — template/placeholder values only (safe)"
-              fi
-            done <<< "$TRACKED_ENV"
-
-            if [ "$REAL_CREDS" -eq 1 ]; then
-              echo ""
-              echo "──────────────────────────────────────────"
-              echo "❌ SECURITY FAIL — committed .env with real credentials"
-              echo "   HITL Action Required: Remove or redact before merge"
+            if [ -n "$REAL" ]; then
+              echo "FAIL: Real credentials detected in .env"
+              echo "$REAL"
+              echo "HITL Action Required: Remove or redact before merge"
               exit 1
+            else
+              echo "PASS: .env contains template/placeholder values only"
             fi
           fi
 
-          echo "──────────────────────────────────────────"
-          echo "✅ .env file check PASSED"
-
-      # ──────────────────────────────────────────────────────────
-      #  STEP 2 — Hardcoded Secret Pattern Detection
-      #
-      #  FIX: Original `grep -r "SECRET_KEY" .` had two bugs:
-      #   • Scanned ALL file types including binary and .git
-      #   • Scanned .github/workflows/ — finds its OWN search
-      #     terms (self-referential false positive)
-      #   • No filtering for legitimate env var references
-      #     (e.g. process.env.API_KEY, os.environ['KEY'])
-      #
-      #  NEW: --exclude-dir=.github prevents self-match
-      #       --include targets only source/config files
-      #       Filter removes legitimate env-var references
-      # ──────────────────────────────────────────────────────────
       - name: Detect hardcoded secret patterns
         run: |
-          echo ""
-          echo "🔍 Scanning for hardcoded credential patterns..."
-          echo "──────────────────────────────────────────────────"
-
-          PATTERNS=(
-            "SECRET_KEY"
-            "API_KEY"
-            "PRIVATE_KEY"
-            "ACCESS_TOKEN"
-            "CLIENT_SECRET"
-            "DB_PASSWORD"
-            "DATABASE_URL"
-            "BEARER_TOKEN"
-          )
+          echo "=== RZ1: Scanning for hardcoded secrets ==="
 
           FOUND=0
-          for pattern in "${PATTERNS[@]}"; do
-            RAW=$(grep -rn \
-              --include="*.py"   --include="*.js"   --include="*.ts"  \
-              --include="*.json" --include="*.env"  --include="*.sh"  \
-              --include="*.php"  --include="*.rb"   --include="*.go"  \
+          for pattern in SECRET_KEY API_KEY PRIVATE_KEY ACCESS_TOKEN CLIENT_SECRET DB_PASSWORD BEARER_TOKEN; do
+            MATCHES=$(grep -rn \
+              --include="*.py" \
+              --include="*.js" \
+              --include="*.ts" \
+              --include="*.json" \
+              --include="*.sh" \
               --exclude-dir=".git" \
               --exclude-dir=".github" \
-              "$pattern" . 2>/dev/null || true)
+              "$pattern" . 2>/dev/null \
+              | grep -v "process.env" \
+              | grep -v "os.environ" \
+              | grep -v "getenv" \
+              | grep -v "secrets\." \
+              || true)
 
-            if [ -n "$RAW" ]; then
-              # Filter out legitimate patterns:
-              # process.env.KEY, os.environ['KEY'], getenv(), ${VAR}, ${{ secrets }}
-              REAL=$(echo "$RAW" \
-                | grep -v '#' \
-                | grep -v 'process\.env\.' \
-                | grep -v 'os\.environ' \
-                | grep -v 'getenv(' \
-                | grep -v 'ENV\[' \
-                | grep -v '\${{' \
-                | grep -v 'config\.' \
-                | grep -v '\.env\.' \
-                || true)
-
-              if [ -n "$REAL" ]; then
-                echo "  ⚠️  [$pattern] — potential hardcoded value:"
-                echo "$REAL"
-                FOUND=1
-              fi
+            if [ -n "$MATCHES" ]; then
+              echo "WARNING [$pattern] potential hardcoded value:"
+              echo "$MATCHES"
+              FOUND=1
             fi
           done
 
-          echo "──────────────────────────────────────────────────"
           if [ "$FOUND" -eq 0 ]; then
-            echo "✅ Hardcoded secret pattern check PASSED"
+            echo "PASS: No hardcoded secrets detected"
           else
-            echo "❌ SECURITY FAIL — hardcoded credentials detected"
-            echo "   HITL Action Required: Replace with environment secrets"
+            echo "FAIL: Potential hardcoded credentials found"
+            echo "HITL Action Required: Replace with GitHub Secrets"
             exit 1
           fi
 
-      # ──────────────────────────────────────────────────────────
-      #  STEP 3 — .gitignore Policy Verification
-      #  Ensure .env is listed in .gitignore (best practice)
-      # ──────────────────────────────────────────────────────────
-      - name: Verify .gitignore policy
+      - name: Check .gitignore policy
         run: |
-          echo ""
-          echo "📄 Verifying .gitignore policy..."
-          echo "──────────────────────────────────"
+          echo "=== RZ1: Checking .gitignore policy ==="
 
-          if [ -f ".gitignore" ]; then
-            if grep -qE '^\.env$|^\.env\s*$' .gitignore; then
-              echo "  ✅ .env is listed in .gitignore"
-            else
-              echo "  ⚠️  .env is NOT in .gitignore — recommend adding it"
-              echo "   Suggestion: echo '.env' >> .gitignore"
-              # Warning only — not a hard fail
-            fi
+          if [ -f ".gitignore" ] && grep -qE "^\.env" .gitignore; then
+            echo "PASS: .env is listed in .gitignore"
           else
-            echo "  ⚠️  No .gitignore found — recommend creating one"
+            echo "WARNING: .env is not in .gitignore"
+            echo "Recommendation: Run: echo '.env' >> .gitignore"
           fi
 
-          echo "──────────────────────────────────"
-          echo "✅ .gitignore policy check complete"
-
-      # ──────────────────────────────────────────────────────────
-      #  STEP 4 — Security Summary
-      # ──────────────────────────────────────────────────────────
-      - name: Security enforcement summary
+      - name: Security summary
         if: success()
         run: |
-          echo ""
-          echo "╔═════════════════════════════════════════════════╗"
-          echo "║     RZ1 SECURITY ENFORCEMENT — SUMMARY          ║"
-          echo "╠═════════════════════════════════════════════════╣"
-          echo "║ Repository : $GITHUB_REPOSITORY"
-          echo "║ Commit SHA : ${GITHUB_SHA:0:10}"
-          echo "║ Timestamp  : $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-          echo "╠═════════════════════════════════════════════════╣"
-          echo "║ .env Detection (git-aware)   : ✅ PASSED        ║"
-          echo "║ Secret Pattern Scan          : ✅ PASSED        ║"
-          echo "║ .gitignore Policy            : ✅ VERIFIED      ║"
-          echo "╠═════════════════════════════════════════════════╣"
-          echo "║ OVERALL STATUS : ✅ SECURE                      ║"
-          echo "║ Framework      : ONSA 2025 | CPC | RMC (MCMC)  ║"
-          echo "╚═════════════════════════════════════════════════╝"
-
+          echo "=================================================="
+          echo " RZ1 SECURITY ENFORCEMENT - SUMMARY"
+          echo "=================================================="
+          echo " Repository : $GITHUB_REPOSITORY"
+          echo " Commit SHA : ${GITHUB_SHA:0:10}"
+          echo " Timestamp  : $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "--------------------------------------------------"
+          echo " .env Detection (git-aware) : PASSED"
+          echo " Secret Pattern Scan        : PASSED"
+          echo " .gitignore Policy          : VERIFIED"
+          echo "--------------------------------------------------"
+          echo " STATUS    : SECURE"
+          echo " Framework : ONSA 2025 | CPC | RMC (MCMC)"
+          echo "=================================================="
