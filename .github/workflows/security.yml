@@ -1,0 +1,30 @@
+name: RZ1 Security Enforcement
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  security-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect .env files
+        run: |
+          if find . -name ".env"; then
+            echo "❌ .env file detected"
+            exit 1
+          else
+            echo "✅ No .env files"
+          fi
+
+      - name: Detect secrets pattern
+        run: |
+          if grep -r "SECRET_KEY" .; then
+            echo "❌ Secret detected"
+            exit 1
+          else
+            echo "✅ No secrets found"
+          fi
