@@ -133,6 +133,35 @@ ethical-ai-my/
         └── feature_request.md
 ```
 
+### Application Scaffold (Cross-Audit Transparency Layer Prototype)
+
+```
+ethical-ai-my/
+├── app/
+│   ├── main.py
+│   ├── core/
+│   │   ├── config.py
+│   │   ├── security.py
+│   ├── audit/
+│   │   ├── logger.py
+│   │   ├── models.py
+│   │   ├── hash_chain.py
+│   ├── consent/
+│   │   ├── registry.py
+│   │   ├── models.py
+│   ├── api/
+│   │   ├── routes/
+│   │   │   ├── audit.py
+│   │   │   ├── consent.py
+│   └── middleware/
+│       ├── audit_middleware.py
+├── data/
+│   ├── audit_logs.jsonl
+├── tests/
+├── requirements.txt
+└── README.md
+```
+
 ---
 
 ## Key Principles
