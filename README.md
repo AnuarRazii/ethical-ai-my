@@ -94,6 +94,13 @@ Guidelines for participation:
 - Intellectual property recognition
 - Historical record maintenance
 
+### 6. **AUDIT_TRANSPARENCY.md** – Cross-Audit Transparency Layer
+- Layered Audit Architecture (APDP 2010 compliance)
+- Data Provenance Transparency
+- User-Control Governance (Right to Access & Erasure)
+- Zero-Knowledge & Local Processing
+- JPDP regulatory readiness
+
 ---
 
 ## Supplementary Documents
@@ -114,6 +121,7 @@ ethical-ai-my/
 ├── GOVERNANCE.md
 ├── SECURITY.md
 ├── ATTRIBUTION.md
+├── AUDIT_TRANSPARENCY.md
 ├── CODE_OF_CONDUCT.md
 ├── FINAL_INTENT.md
 ├── ethical-ai-my-archive-bilingual.html
