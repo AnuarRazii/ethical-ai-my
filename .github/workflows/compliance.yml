@@ -2,21 +2,47 @@ name: RZ1 Compliance Engine
 
 on:
   push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 3 * * 1"
+
+permissions:
+  contents: read
 
 jobs:
   compliance:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate structure
+      - name: Validate required repository files
         run: |
-          test -f README.md || echo "❌ Missing README"
-          test -f LICENSE || echo "❌ Missing LICENSE"
+          set -euo pipefail
+          required_files=(
+            "README.md"
+            "LICENSE"
+            "ETHICS.md"
+            "GOVERNANCE.md"
+            "SECURITY.md"
+            "CODE_OF_CONDUCT.md"
+            "ATTRIBUTION.md"
+            "FINAL_INTENT.md"
+          )
+
+          for file in "${required_files[@]}"; do
+            test -f "$file" || { echo "❌ Missing $file"; exit 1; }
+          done
+          echo "✅ Required repository structure is valid"
 
       - name: Ethical audit
         run: |
+          set -euo pipefail
           echo "Running ethical compliance checks..."
+          grep -q "Open, Auditable, Non-Mandatory Reference" README.md \
+            || { echo "❌ README does not contain core reference statement"; exit 1; }
+          echo "✅ Core compliance statement verified"
