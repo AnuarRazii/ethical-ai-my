@@ -1,22 +1,85 @@
-name: RZ1 Compliance Engine
+name: RZ1 Unified Validation Gate
 
 on:
+  pull_request:
+    branches: [main]
   push:
-  schedule:
-    - cron: "0 0 * * *"
+    branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
-  compliance:
+  rz1-validation:
+    name: RZ1 Validation Gate
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Validate structure
+      - name: Validate repository structure
         run: |
-          test -f README.md || echo "❌ Missing README"
-          test -f LICENSE || echo "❌ Missing LICENSE"
+          required_files=("README.md" "LICENSE" "ETHICS.md" "SECURITY.md")
+          optional_files=("GOVERNANCE.md" "ATTRIBUTION.md" "FINAL_INTENT.md" "CODE_OF_CONDUCT.md")
 
-      - name: Ethical audit
+          failed=0
+
+          echo "=== REQUIRED FILES CHECK ==="
+          for file in "${required_files[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "ERROR: Missing required file: $file"
+              failed=1
+            else
+              echo "OK: $file"
+            fi
+          done
+
+          echo "=== OPTIONAL FILES CHECK ==="
+          for file in "${optional_files[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "WARNING: Optional file missing: $file"
+            else
+              echo "OK: $file"
+            fi
+          done
+
+          if [ "$failed" -eq 1 ]; then
+            exit 1
+          fi
+
+      - name: Validate ethical compliance
         run: |
-          echo "Running ethical compliance checks..."
+          if grep -qE "Core Ethical Principles|Prinsip Teras" ETHICS.md; then
+            echo "Ethical compliance OK"
+          else
+            echo "ERROR: ETHICS.md missing required section"
+            exit 1
+          fi
+
+      - name: Validate security baseline
+        run: |
+          if git ls-files --error-unmatch '*.env' 2>/dev/null; then
+            echo "ERROR: .env file detected in repo"
+            exit 1
+          fi
+
+      - name: Validate README governance block
+        run: |
+          if grep -qE "Prinsip Teras|Governance|Compliance" README.md; then
+            echo "README governance OK"
+          else
+            echo "WARNING: README governance block not detected"
+          fi
+
+      - name: Generate audit log
+        run: |
+          echo "RZ1 Validation Report" > rz1-report.txt
+          echo "Timestamp: $(date)" > rz1-report.txt
+          echo "Commit: $GITHUB_SHA" > rz1-report.txt
+
+      - name: Upload audit artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rz1-audit-log
+          path: rz1-report.txt
