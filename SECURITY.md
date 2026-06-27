@@ -4,6 +4,34 @@
 
 ---
 
+## Reporting a Vulnerability
+
+If you discover a security vulnerability in this repository, please report it **privately** to ensure responsible disclosure.
+
+**Do not open a public issue for security vulnerabilities.**
+
+### How to Report
+
+1. **GitHub Security Advisories (Preferred):** Open a private advisory at  
+   [https://github.com/AnuarRazii/ethical-ai-my/security/advisories/new](https://github.com/AnuarRazii/ethical-ai-my/security/advisories/new)
+
+2. **Email:** Contact the maintainer directly at the email address associated with the GitHub account.
+
+### What to Include
+
+- Description of the vulnerability and its potential impact
+- Steps to reproduce or proof-of-concept (if applicable)
+- Affected files, versions, or sections
+- Your suggested fix or mitigation (optional)
+
+### Response Commitment
+
+- We will acknowledge your report within **72 hours**
+- We will investigate and provide an update within **14 days**
+- We will credit you in the security advisory (unless you prefer anonymity)
+
+---
+
 ## Overview
 
 This document establishes security standards and risk management requirements for AI systems. These standards address technical security, operational safeguards, and governance requirements necessary to protect systems, data, and stakeholders.

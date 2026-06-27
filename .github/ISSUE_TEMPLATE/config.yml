@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "💬 Start a Discussion"
+    url: https://github.com/AnuarRazii/ethical-ai-my/discussions
+    about: "Use Discussions for questions, ideas, and general conversation."
+  - name: "📖 Read the Documentation"
+    url: https://github.com/AnuarRazii/ethical-ai-my/blob/main/README.md
+    about: "Review the full Ethical AI MY documentation before opening an issue."
+  - name: "🔒 Report a Security Vulnerability"
+    url: https://github.com/AnuarRazii/ethical-ai-my/security/advisories/new
+    about: "Report security vulnerabilities privately via GitHub Security Advisories."

@@ -1,0 +1,152 @@
+# GitHub Repository Settings — Ethical AI MY
+# Tatacara Kerja Etika AI Malaysia — Ethical AI Governance Framework
+#
+# This file is processed by the Probot Settings app
+# https://github.com/repository-settings/app
+#
+# Framework: ONSA 2025 | CPC | RMC (MCMC, eff. 1 Jun 2026)
+
+repository:
+  name: ethical-ai-my
+  description: "Tatacara Kerja Etika AI Malaysia — Ethical AI Governance Framework | Open, Auditable, Non-Mandatory Reference for Responsible AI in Malaysia"
+  homepage: "https://anuarrazii.github.io/ethical-ai-my/"
+  topics:
+    - ethical-ai
+    - governance
+    - malaysia
+    - ai-policy
+    - ai-ethics
+    - compliance
+    - open-governance
+    - responsible-ai
+    - onsa2025
+    - mcmc
+
+  private: false
+  has_issues: true
+  has_projects: true
+  has_wiki: true
+  has_downloads: true
+
+  # Default branch
+  default_branch: main
+
+  # Pull request merge settings
+  allow_squash_merge: true
+  allow_merge_commit: false
+  allow_rebase_merge: true
+  squash_merge_commit_title: PR_TITLE
+  squash_merge_commit_message: PR_BODY
+
+  # Post-merge automation
+  delete_branch_on_merge: true
+
+  # Auto-merge
+  allow_auto_merge: true
+
+  # Suggest updating PR branches
+  allow_update_branch: true
+
+  # Security
+  enable_automated_security_fixes: true
+  enable_vulnerability_alerts: true
+
+  # Archive
+  use_squash_pr_title_as_default: true
+
+# Labels
+labels:
+  - name: "bug"
+    color: "d73a4a"
+    description: "Something isn't working correctly"
+
+  - name: "documentation"
+    color: "0075ca"
+    description: "Improvements or additions to documentation"
+
+  - name: "enhancement"
+    color: "a2eeef"
+    description: "New feature or request"
+
+  - name: "good first issue"
+    color: "7057ff"
+    description: "Good for newcomers to the project"
+
+  - name: "help wanted"
+    color: "008672"
+    description: "Extra attention is needed"
+
+  - name: "question"
+    color: "d876e3"
+    description: "Further information is requested"
+
+  - name: "invalid"
+    color: "e4e669"
+    description: "This doesn't seem right"
+
+  - name: "wontfix"
+    color: "ffffff"
+    description: "This will not be worked on"
+
+  - name: "duplicate"
+    color: "cfd3d7"
+    description: "This issue or pull request already exists"
+
+  - name: "policy"
+    color: "0e8a16"
+    description: "Policy or governance framework change"
+
+  - name: "security"
+    color: "b60205"
+    description: "Security-related issue or improvement"
+
+  - name: "ethics"
+    color: "1d76db"
+    description: "Ethical alignment review required"
+
+  - name: "governance"
+    color: "e99695"
+    description: "Governance model proposal or change"
+
+  - name: "bilingual"
+    color: "c5def5"
+    description: "Requires translation or bilingual update (EN/MY)"
+
+  - name: "compliance"
+    color: "bfd4f2"
+    description: "Regulatory or framework compliance requirement"
+
+  - name: "needs-review"
+    color: "fbca04"
+    description: "Awaiting review from maintainers"
+
+  - name: "ready-to-merge"
+    color: "0e8a16"
+    description: "Approved and ready to be merged"
+
+  - name: "blocked"
+    color: "d93f0b"
+    description: "Blocked by another issue or external dependency"
+
+# Branch protection rules for main
+branches:
+  - name: main
+    protection:
+      required_status_checks:
+        strict: true
+        contexts:
+          - "RZ1 Compliance Engine / compliance"
+          - "RZ1 Security Check"
+      enforce_admins: false
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: true
+        require_last_push_approval: true
+      restrictions: null
+      required_linear_history: true
+      allow_force_pushes: false
+      allow_deletions: false
+      block_creations: false
+      required_conversation_resolution: true
+      required_signatures: false
