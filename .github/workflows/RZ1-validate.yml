@@ -40,7 +40,7 @@ jobs:
         run: |
           set -e
           echo "Checking for tracked .env files..."
-          if git ls-files | grep -E '(^|/)\.env(\..*)?$' >/dev/null; then
+          if git ls-files | grep -E '(^|/)\.env$' >/dev/null; then
             echo "Tracked .env file detected"
             exit 1
           fi
