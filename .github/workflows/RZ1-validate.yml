@@ -1,5 +1,4 @@
-name: RZ1 Unified Validation Gate
-
+name: RZ1 Validate
 on:
   pull_request:
     branches:
@@ -11,12 +10,9 @@ on:
 permissions:
   contents: read
 
-permissions:
-  contents: read
-
 jobs:
   validate:
-    name: RZ1 Unified Validation Gate
+    name: RZ1 Validate
     runs-on: ubuntu-latest
 
     steps:
