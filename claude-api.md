@@ -27,8 +27,11 @@ description: >
 
 ```python
 import anthropic
+import os
 
-client = anthropic.Anthropic(api_key="ANTHROPIC_API_KEY")
+# Reads ANTHROPIC_API_KEY from the environment automatically;
+# never hard-code the key in source files.
+client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
 response = client.messages.create(
     model="claude-sonnet-4-6",      # default — see §4 for model guide
@@ -62,10 +65,18 @@ All outputs marked as *official* (letters, certificates, governance docs,
 public posts) **must** pass through this wrapper before delivery.
 
 ```python
-def hitl_wrap(raw_output: str, context: str, reviewer: str = "Anuar Razii") -> dict:
+from datetime import datetime, timezone
+
+def hitl_wrap(
+    raw_output: str,
+    context: str,
+    model_used: str = "claude-sonnet-4-6",
+    reviewer: str = "Anuar Razii",
+) -> dict:
     """
     Flags AI output for human review before release.
-    Returns a structured review packet.
+    Returns a structured review packet including model used and UTC timestamp
+    to satisfy the audit-log requirement (§9).
     """
     return {
         "status": "PENDING_HUMAN_REVIEW",
@@ -73,7 +84,8 @@ def hitl_wrap(raw_output: str, context: str, reviewer: str = "Anuar Razii") -> d
         "context": context,
         "ai_output": raw_output,
         "governance": {
-            "model_used": "claude-sonnet-4-6",
+            "model_used": model_used,
+            "timestamp_utc": datetime.now(timezone.utc).isoformat(),
             "compliance": ["ONSA_2025", "PDPA_2010", "CPC", "RMC"],
             "hitl_required": True,
         },
@@ -82,7 +94,11 @@ def hitl_wrap(raw_output: str, context: str, reviewer: str = "Anuar Razii") -> d
 # Usage
 result = client.messages.create(model="claude-sonnet-4-6", max_tokens=512,
     messages=[{"role":"user","content": prompt}])
-packet = hitl_wrap(result.content[0].text, context="LinkedIn post draft")
+packet = hitl_wrap(
+    result.content[0].text,
+    context="LinkedIn post draft",
+    model_used="claude-sonnet-4-6",
+)
 # → show packet["ai_output"] to Anuar for approval before publishing
 ```
 
@@ -180,7 +196,11 @@ def safe_call(prompt: str, retries: int = 3) -> str:
 
 ```python
 # Always check token usage
-response = client.messages.create(…)
+response = client.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": prompt}],
+)
 usage = response.usage
 print(f"Input: {usage.input_tokens} | Output: {usage.output_tokens}")
 
@@ -214,3 +234,5 @@ Before deploying any Claude API integration under Ardoop Technologies:
 | API base | `https://api.anthropic.com` |
 | Messages endpoint | `POST /v1/messages` |
 | Auth header | `x-api-key: <your-key>` |
+| Version header | `anthropic-version: 2023-06-01` |
+| Content-Type header | `content-type: application/json` |
