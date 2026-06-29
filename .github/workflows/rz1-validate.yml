@@ -1,0 +1,82 @@
+name: RZ1 Validate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: RZ1 Validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect committed .env files
+        run: |
+          echo "=== RZ1 Validate: Scanning for committed .env files ==="
+
+          TRACKED=$(git ls-files | grep -E '(^|/)\.env$' || true)
+
+          if [ -z "$TRACKED" ]; then
+            echo "PASS: No tracked .env files found"
+          else
+            echo "WARNING: Tracked .env file found - $TRACKED"
+
+            REAL=$(grep -vE "^\s*(#|$)" $TRACKED 2>/dev/null \
+              | grep -E "^[A-Z_]+=.+" \
+              | grep -ivE "(example|placeholder|changeme|your_|dummy|test)" \
+              || true)
+
+            if [ -n "$REAL" ]; then
+              echo "FAIL: Real credentials detected in .env"
+              echo "$REAL"
+              exit 1
+            else
+              echo "PASS: .env contains template/placeholder values only"
+            fi
+          fi
+
+      - name: Validate required files
+        run: |
+          echo "=== RZ1 Validate: Checking required repository files ==="
+          FAILED=0
+
+          for f in README.md LICENSE; do
+            if [ ! -f "$f" ]; then
+              echo "FAIL: Missing required file: $f"
+              FAILED=1
+            else
+              echo "PASS: $f exists"
+            fi
+          done
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo "FAIL: Validation failed - missing required files"
+            exit 1
+          fi
+
+      - name: Validate summary
+        run: |
+          echo "=================================================="
+          echo " RZ1 VALIDATE - SUMMARY"
+          echo "=================================================="
+          echo " Repository : $GITHUB_REPOSITORY"
+          echo " Commit SHA : ${GITHUB_SHA:0:10}"
+          echo " Timestamp  : $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "--------------------------------------------------"
+          echo " STATUS: PASSED"
+          echo "=================================================="
