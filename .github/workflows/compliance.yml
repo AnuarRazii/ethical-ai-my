@@ -14,8 +14,8 @@ jobs:
 
       - name: Validate structure
         run: |
-          test -f README.md || echo "❌ Missing README"
-          test -f LICENSE || echo "❌ Missing LICENSE"
+          test -f README.md || (echo "❌ Missing README" && exit 1)
+          test -f LICENSE || (echo "❌ Missing LICENSE" && exit 1)
 
       - name: Ethical audit
         run: |

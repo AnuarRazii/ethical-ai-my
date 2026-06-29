@@ -16,7 +16,7 @@ jobs:
       - name: Basic audit scan
         run: |
           echo "Running audit..."
-          if grep -r "API_KEY" .; then
+          if grep -r --exclude-dir=".git" --exclude-dir=".github" --exclude-dir="node_modules" "API_KEY" .; then
             echo "⚠️ Potential secret detected"
           else
             echo "✅ No secrets found"
