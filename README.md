@@ -2,6 +2,19 @@
 
 **Open, Auditable, Non-Mandatory Reference for Ethical AI in Malaysia**
 
+## Prinsip Teras
+
+Repositori ini adalah **Open, Auditable, Non-Mandatory Reference** untuk tadbir urus AI bertanggungjawab di Malaysia. Setiap komponen boleh disemak secara terbuka, setiap keputusan mempunyai jejak audit yang lengkap, dan penggunaan adalah pilihan bebas komuniti.
+
+| Prinsip | Maksud |
+|---------|--------|
+| **Open** | Kod dan dasar terbuka untuk semua |
+| **Auditable** | Setiap perubahan mempunyai audit trail |
+| **Non-Mandatory Reference** | Rujukan, bukan standard wajib |
+
+> Pematuhan: ONSA 2025 \| CPC \| RMC (berkuat kuasa 1 Jun 2026)  
+> Direktif HITL aktif — manusia sentiasa dalam kawalan.
+
 ---
 
 ## Overview
