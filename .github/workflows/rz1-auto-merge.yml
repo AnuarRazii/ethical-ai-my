@@ -16,8 +16,8 @@ permissions:
 jobs:
   auto-merge:
     name: RZ1 Auto Merge
-    runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]' || github.event.pull_request.user.login == github.repository_owner
+    runs-on: ubuntu-24.04
+    if: github.actor == 'dependabot[bot]' || github.event.pull_request.author_association == 'OWNER'
 
     steps:
       - name: Enable auto-merge
