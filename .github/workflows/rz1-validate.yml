@@ -1,4 +1,5 @@
 name: RZ1 Validate
+
 on:
   pull_request:
     branches:
@@ -25,27 +26,29 @@ jobs:
           echo "Checking required files..."
           for file in README.md LICENSE ETHICS.md GOVERNANCE.md SECURITY.md ATTRIBUTION.md CODE_OF_CONDUCT.md FINAL_INTENT.md; do
             if [ ! -f "$file" ]; then
-              echo "Missing required file: $file"
+              echo "::error file=$file::Missing required file: $file"
               exit 1
             fi
           done
+          echo "All required files present."
 
       - name: Validate ethical compliance
         run: |
           set -e
-          echo "Checking ethical compliance statement..."
-          grep -q "## Core Ethical Principles" ETHICS.md || { echo "Ethical compliance block missing"; exit 1; }
+          grep -q "## Core Ethical Principles" ETHICS.md || {
+            echo "::error file=ETHICS.md::Ethical compliance block missing"
+            exit 1
+          }
+          echo "ETHICS.md validation passed."
 
       - name: Security baseline check
         run: |
           set -e
-          echo "Checking for tracked .env files..."
-          if git ls-files | grep -E '(^|/)\.env$' >/dev/null; then
-            echo "Tracked .env file detected"
+          if git ls-files | grep -E '(^|/)\.env$'; then
+            echo "::error::Tracked .env file detected"
             exit 1
           fi
+          echo "Security baseline passed."
 
       - name: Final validation
-        run: |
-          set -e
-          echo "RZ1 VALIDATION PASSED"
+        run: echo "RZ1 VALIDATION PASSED"

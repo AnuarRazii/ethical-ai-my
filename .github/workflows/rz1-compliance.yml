@@ -1,0 +1,62 @@
+name: RZ1 Compliance Engine
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  compliance:
+    name: RZ1 Compliance Engine
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Validate required files
+        run: |
+          set -e
+          for file in README.md LICENSE ETHICS.md GOVERNANCE.md SECURITY.md ATTRIBUTION.md CODE_OF_CONDUCT.md FINAL_INTENT.md; do
+            if [ ! -f "$file" ]; then
+              echo "::error file=$file::Missing required file: $file"
+              exit 1
+            fi
+          done
+          echo "Required files check passed."
+
+      - name: ETHICS structured validation
+        run: |
+          set -e
+          grep -q "## Core Ethical Principles" ETHICS.md || {
+            echo "::error file=ETHICS.md::Missing '## Core Ethical Principles' section"
+            exit 1
+          }
+          echo "ETHICS.md structure validated."
+
+      - name: README governance presence
+        run: |
+          set -e
+          grep -qi "governance" README.md || {
+            echo "::error file=README.md::Governance reference missing from README.md"
+            exit 1
+          }
+          echo "README.md governance presence confirmed."
+
+      - name: .env blocking
+        run: |
+          set -e
+          if git ls-files | grep -E '(^|/)\.env$'; then
+            echo "::error::Tracked .env file detected — merge blocked"
+            exit 1
+          fi
+          echo ".env check passed."
+
+      - name: Compliance summary
+        run: echo "RZ1 COMPLIANCE ENGINE PASSED"
