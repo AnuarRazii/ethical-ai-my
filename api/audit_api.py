@@ -26,6 +26,11 @@ def make_trace_id(trace_id: str = "") -> str:
     return trace_id or str(uuid.uuid4())
 
 
+def sanitize_header_value(value: str) -> str:
+    cleaned = "".join(ch for ch in value if ch.isalnum() or ch in "-_:.")
+    return cleaned[:128] or str(uuid.uuid4())
+
+
 def versioned_response(data: Any, trace_id: str) -> Dict[str, Any]:
     return {
         "output_version": OUTPUT_VERSION,
@@ -117,10 +122,11 @@ class AuditAPIHandler(BaseHTTPRequestHandler):
 
     def _send(self, status: int, payload: Dict[str, Any], trace_id: str) -> None:
         body = json.dumps(versioned_response(payload, trace_id), indent=2).encode("utf-8")
+        header_trace_id = sanitize_header_value(trace_id)
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("X-Trace-Id", trace_id)
+        self.send_header("X-Trace-Id", header_trace_id)
         self.end_headers()
         self.wfile.write(body)
 
