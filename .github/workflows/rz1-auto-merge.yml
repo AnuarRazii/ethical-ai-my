@@ -1,6 +1,9 @@
 name: RZ1 Auto Merge
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
