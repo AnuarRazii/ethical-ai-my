@@ -1,4 +1,4 @@
-name: RZ1 Compliance Engine
+name: RZ1 Compliance Engine (RZ1)
 
 on:
   pull_request:
@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   compliance:
-    name: RZ1 Compliance Engine
+    name: RZ1 Compliance Engine (RZ1)
     runs-on: ubuntu-24.04
 
     steps:
@@ -22,7 +22,7 @@ jobs:
 
       - name: Validate required files
         run: |
-          set -e
+          set -euo pipefail
           for file in README.md LICENSE ETHICS.md GOVERNANCE.md SECURITY.md ATTRIBUTION.md CODE_OF_CONDUCT.md FINAL_INTENT.md; do
             if [ ! -f "$file" ]; then
               echo "::error file=$file::Missing required file: $file"
@@ -33,7 +33,7 @@ jobs:
 
       - name: ETHICS structured validation
         run: |
-          set -e
+          set -euo pipefail
           grep -q "## Core Ethical Principles" ETHICS.md || {
             echo "::error file=ETHICS.md::Missing '## Core Ethical Principles' section"
             exit 1
@@ -42,7 +42,7 @@ jobs:
 
       - name: README governance presence
         run: |
-          set -e
+          set -euo pipefail
           grep -qi "governance" README.md || {
             echo "::error file=README.md::Governance reference missing from README.md"
             exit 1
@@ -51,7 +51,7 @@ jobs:
 
       - name: .env blocking
         run: |
-          set -e
+          set -euo pipefail
           if git ls-files | grep -E '(^|/)\.env$'; then
             echo "::error::Tracked .env file detected — merge blocked"
             exit 1
