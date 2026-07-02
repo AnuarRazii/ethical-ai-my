@@ -20,6 +20,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Auto-create missing required files
+        run: |
+          set -euo pipefail
+          bash scripts/ensure_required_files.sh
+
       - name: Validate required repository files
         run: |
           set -euo pipefail
@@ -32,6 +37,7 @@ jobs:
             "CODE_OF_CONDUCT.md"
             "ATTRIBUTION.md"
             "FINAL_INTENT.md"
+            "RELEASE_NOTES.md"
           )
 
           for file in "${required_files[@]}"; do
@@ -46,3 +52,34 @@ jobs:
           grep -q "Open, Auditable, Non-Mandatory Reference" README.md \
             || { echo "❌ README does not contain core reference statement"; exit 1; }
           echo "✅ Core compliance statement verified"
+
+      - name: Validate release metadata consistency
+        run: |
+          set -euo pipefail
+
+          readme_version=$(grep -E "^- \*\*Version:\*\*" README.md | head -n1 | sed -E 's/.*\*\*Version:\*\* *([0-9.]+).*/\1/')
+          readme_date=$(grep -E "^- \*\*Release Date:\*\*" README.md | head -n1 | sed -E 's/.*\*\*Release Date:\*\* *([0-9-]+).*/\1/')
+
+          release_notes_version=$(grep -E "^- \*\*Version:\*\*" RELEASE_NOTES.md | head -n1 | sed -E 's/.*\*\*Version:\*\* *([0-9.]+).*/\1/')
+          release_notes_date=$(grep -E "^- \*\*Release Date:\*\*" RELEASE_NOTES.md | head -n1 | sed -E 's/.*\*\*Release Date:\*\* *([0-9-]+).*/\1/')
+
+          governance_version=$(grep -E "\\*Version [0-9.]+ \\| Release Date: [0-9-]+\\*" GOVERNANCE.md | head -n1 | sed -E 's/.*Version ([0-9.]+) \| Release Date: ([0-9-]+).*/\1/')
+          governance_date=$(grep -E "\\*Version [0-9.]+ \\| Release Date: [0-9-]+\\*" GOVERNANCE.md | head -n1 | sed -E 's/.*Version ([0-9.]+) \| Release Date: ([0-9-]+).*/\2/')
+
+          ethics_version=$(grep -E "\\*Version [0-9.]+ \\| Release Date: [0-9-]+\\*" ETHICS.md | head -n1 | sed -E 's/.*Version ([0-9.]+) \| Release Date: ([0-9-]+).*/\1/')
+          ethics_date=$(grep -E "\\*Version [0-9.]+ \\| Release Date: [0-9-]+\\*" ETHICS.md | head -n1 | sed -E 's/.*Version ([0-9.]+) \| Release Date: ([0-9-]+).*/\2/')
+
+          [ -n "$readme_version" ] && [ -n "$readme_date" ] || { echo "❌ Missing version/date in README.md"; exit 1; }
+          [ -n "$release_notes_version" ] && [ -n "$release_notes_date" ] || { echo "❌ Missing version/date in RELEASE_NOTES.md"; exit 1; }
+          [ -n "$governance_version" ] && [ -n "$governance_date" ] || { echo "❌ Missing version/date in GOVERNANCE.md"; exit 1; }
+          [ -n "$ethics_version" ] && [ -n "$ethics_date" ] || { echo "❌ Missing version/date in ETHICS.md"; exit 1; }
+
+          [ "$readme_version" = "$release_notes_version" ] || { echo "❌ Version mismatch: README.md vs RELEASE_NOTES.md"; exit 1; }
+          [ "$readme_version" = "$governance_version" ] || { echo "❌ Version mismatch: README.md vs GOVERNANCE.md"; exit 1; }
+          [ "$readme_version" = "$ethics_version" ] || { echo "❌ Version mismatch: README.md vs ETHICS.md"; exit 1; }
+
+          [ "$readme_date" = "$release_notes_date" ] || { echo "❌ Release date mismatch: README.md vs RELEASE_NOTES.md"; exit 1; }
+          [ "$readme_date" = "$governance_date" ] || { echo "❌ Release date mismatch: README.md vs GOVERNANCE.md"; exit 1; }
+          [ "$readme_date" = "$ethics_date" ] || { echo "❌ Release date mismatch: README.md vs ETHICS.md"; exit 1; }
+
+          echo "✅ Release metadata consistency verified"
