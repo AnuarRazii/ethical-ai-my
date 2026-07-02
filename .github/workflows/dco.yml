@@ -1,0 +1,167 @@
+# DCO Enforcement | Penguatkuasaan DCO
+# Ethical AI MY – Developer Certificate of Origin Check
+# Framework: ONSA 2025 | CPC | RMC (MCMC, eff. 1 Jun 2026)
+#
+# Ensures every commit in a Pull Request carries a valid
+# "Signed-off-by:" trailer per the Developer Certificate of Origin (DCO).
+# Web-based commits are covered by the repository-level
+# `web_commit_signoff_required` setting (see .github/settings.yml).
+#
+# Governance ref: CONTRIBUTING.md § 9 — Traceability and Auditability
+
+name: DCO Check
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: dco-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  dco-check:
+    name: DCO Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify DCO sign-off on all commits
+        id: dco
+        run: |
+          set -euo pipefail
+
+          echo "=================================================="
+          echo " DCO CHECK — Ethical AI MY"
+          echo " Repository : $GITHUB_REPOSITORY"
+          echo " PR Branch  : ${{ github.head_ref }}"
+          echo " Base Branch: ${{ github.base_ref }}"
+          echo " Timestamp  : $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "=================================================="
+
+          # Fetch the base branch for comparison
+          git fetch origin ${{ github.base_ref }} --quiet
+
+          MISSING_COMMITS=()
+          CHECKED=0
+
+          # Iterate over all commits introduced by this PR
+          while IFS= read -r commit_sha; do
+            [ -z "$commit_sha" ] && continue
+            CHECKED=$((CHECKED + 1))
+
+            commit_msg=$(git log -1 --format="%B" "$commit_sha")
+            commit_subject=$(git log -1 --format="%s" "$commit_sha")
+            commit_author=$(git log -1 --format="%an <%ae>" "$commit_sha")
+
+            echo ""
+            echo "── Commit: ${commit_sha:0:10} ──────────────────────────────"
+            echo "   Subject: $commit_subject"
+            echo "   Author : $commit_author"
+
+            if echo "$commit_msg" | grep -qiE "^Signed-off-by: .+ <.+@.+>"; then
+              signoff=$(echo "$commit_msg" | grep -iE "^Signed-off-by:" | head -1)
+              echo "   DCO    : ✅ $signoff"
+            else
+              echo "   DCO    : ❌ MISSING — No valid 'Signed-off-by:' trailer found"
+              MISSING_COMMITS+=("${commit_sha:0:10} — $commit_subject")
+            fi
+          done < <(git log --format="%H" "origin/${{ github.base_ref }}..HEAD")
+
+          echo ""
+          echo "=================================================="
+          echo " SUMMARY: Checked $CHECKED commit(s)"
+          echo "=================================================="
+
+          if [ ${#MISSING_COMMITS[@]} -gt 0 ]; then
+            echo ""
+            echo "❌ DCO CHECK FAILED"
+            echo ""
+            echo "The following commit(s) are missing a valid DCO sign-off:"
+            for c in "${MISSING_COMMITS[@]}"; do
+              echo "  • $c"
+            done
+            echo ""
+            echo "HOW TO FIX:"
+            echo "  Option 1 — Amend each commit:"
+            echo "    git commit --amend --signoff"
+            echo ""
+            echo "  Option 2 — Add sign-off to all commits in this PR:"
+            echo "    git rebase --signoff origin/${{ github.base_ref }}"
+            echo ""
+            echo "  Option 3 — Use web editor (if web_commit_signoff_required is enabled):"
+            echo "    The GitHub web editor will automatically add sign-off when"
+            echo "    'Require contributors to sign off on web-based commits' is enabled."
+            echo ""
+            echo "  DCO Certificate: https://developercertificate.org"
+            echo "  Governance ref : CONTRIBUTING.md § 9"
+            echo ""
+            # Write failure info for comment step
+            {
+              echo "MISSING_COMMITS<<EOF"
+              for c in "${MISSING_COMMITS[@]}"; do echo "  • $c"; done
+              echo "EOF"
+            } >> "$GITHUB_ENV"
+            echo "dco_passed=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          else
+            echo ""
+            echo "✅ DCO CHECK PASSED — All $CHECKED commit(s) have valid sign-off"
+            echo "dco_passed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Comment on PR if DCO is missing
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `## ❌ DCO Sign-off Missing
+
+            One or more commits in this Pull Request are missing a **Developer Certificate of Origin (DCO)** sign-off.
+
+            ### What is DCO?
+            The DCO is a lightweight way for contributors to certify that they wrote or have the right to submit the code they're contributing.
+            By signing off, you agree to the terms at https://developercertificate.org.
+
+            ### How to fix
+
+            **Option 1 – Amend your last commit:**
+            \`\`\`bash
+            git commit --amend --signoff
+            git push --force-with-lease
+            \`\`\`
+
+            **Option 2 – Add sign-off to all commits in this PR:**
+            \`\`\`bash
+            git rebase --signoff origin/${{ github.base_ref }}
+            git push --force-with-lease
+            \`\`\`
+
+            **Option 3 – Web editor users:**
+            Ensure the repository setting *"Require contributors to sign off on web-based commits"* is enabled. Once enabled, the web editor adds the sign-off automatically.
+
+            ### DCO sign-off format
+            Each commit message must include:
+            \`\`\`
+            Signed-off-by: Your Name <your.email@example.com>
+            \`\`\`
+
+            ---
+            *Governance ref: [CONTRIBUTING.md § 9](../blob/main/CONTRIBUTING.md) | [ETHICS.md](../blob/main/ETHICS.md)*`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
