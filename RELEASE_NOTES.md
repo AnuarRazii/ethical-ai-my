@@ -22,6 +22,7 @@ Ethical AI MY v1.0 represents the initial comprehensive reference release for re
 - **index.html** – Landing page for GitHub Pages
 - **ethical-ai-my-archive-bilingual.html** – Single-page bilingual archive (English/Malay)
 - **ethical-ai-my-diagram-monochrome-bilingual.svg** – Governance model diagram
+- **generate_report.py** – Audit evidence export CLI for JSON and markdown reports
 
 ### GitHub Templates
 - Pull Request Template
@@ -43,6 +44,9 @@ Reference guidance, not regulation. Organizations adapt according to their conte
 
 ### ✓ Comprehensive
 Addresses ethics, governance, security, community standards, and attribution.
+
+### ✓ Audit Evidence Export
+Structured and human-readable audit reporting now supports timestamps, trace IDs, risk scores, and compliance checks from RZ1 logs.
 
 ### ✓ Bilingual
 Core materials available in English and Malay (Bahasa Melayu).

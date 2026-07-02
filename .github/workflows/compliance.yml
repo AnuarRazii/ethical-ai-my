@@ -95,6 +95,7 @@ jobs:
           python3 scripts/audit_logger.py \
             --event "compliance_workflow_check" \
             --actor "github-actions" \
+            --trace-id "compliance-trace-001" \
             --details '{"workflow":"compliance.yml","stage":"advanced_check"}' \
             --output /tmp/rz1_audit_log.json
 
@@ -118,6 +119,7 @@ jobs:
             --detectability 3 \
             --control-strength 2 \
             --context "compliance_workflow" \
+            --trace-id "compliance-trace-001" \
             --output /tmp/rz1_risk_score.json
 
           python3 - <<'PY'
@@ -145,4 +147,32 @@ jobs:
               if key not in payload:
                   raise SystemExit(f"❌ governance/version.json missing: {key}")
           print("✅ Governance version file validated")
+          PY
+
+          python3 generate_report.py \
+            /tmp/rz1_audit_log.json \
+            /tmp/rz1_risk_score.json \
+            --output-json /tmp/audit_report.json \
+            --output-markdown /tmp/audit_report.md \
+            --strict
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("/tmp/audit_report.json").read_text(encoding="utf-8"))
+          for key in ["generated_at", "sources", "summary", "compliance_checks", "traces"]:
+              if key not in payload:
+                  raise SystemExit(f"❌ audit_report.json missing: {key}")
+          if payload["summary"]["total_records"] < 2:
+              raise SystemExit("❌ audit report did not include expected log records")
+          if not payload["traces"]:
+              raise SystemExit("❌ audit report did not include trace groupings")
+
+          markdown = Path("/tmp/audit_report.md").read_text(encoding="utf-8")
+          required_strings = ["Audit Evidence Report", "Compliance Checks", "compliance-trace-001", "Latest risk score"]
+          for value in required_strings:
+              if value not in markdown:
+                  raise SystemExit(f"❌ audit_report.md missing expected content: {value}")
+          print("✅ Audit evidence export validated")
           PY

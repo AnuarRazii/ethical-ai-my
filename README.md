@@ -133,6 +133,7 @@ ethical-ai-my/
 ├── ethical-ai-my-diagram-monochrome-bilingual.svg
 ├── governance/
 │   └── version.json
+├── generate_report.py
 ├── scripts/
 │   ├── ensure_required_files.sh
 │   ├── audit_logger.py
@@ -164,6 +165,7 @@ RZ1 production components now include:
 - JSON audit logging (`scripts/audit_logger.py`)
 - Risk scoring output (`scripts/risk_scoring.py`)
 - Audit tracking API endpoints (`api/audit_api.py`)
+- Audit evidence export CLI (`generate_report.py`)
 - Version and traceability metadata (`governance/version.json`)
 
 ---
@@ -189,6 +191,17 @@ RZ1 production components now include:
 1. Read **CODE_OF_CONDUCT.md** for participation
 2. Review contribution process
 3. Engage respectfully in discussions
+
+### Audit Evidence Export
+Generate audit evidence artifacts from RZ1 log files:
+
+```bash
+python generate_report.py
+```
+
+Default outputs:
+- `audit_report.json` – structured audit evidence export
+- `audit_report.md` – human-readable report with timestamps, trace IDs, risk scores, and compliance checks
 
 ---
 
