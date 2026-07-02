@@ -6,12 +6,17 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import sys
 import uuid
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Any, Dict, List
 from urllib.parse import parse_qs, urlparse
+
+# Allow running from repository root or from the api/ directory.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+from compliance_mapper import compute_compliance_scores  # noqa: E402
 
 OUTPUT_VERSION = "RZ1-1.0"
 GOVERNANCE_VERSION = "1.0"
@@ -71,7 +76,7 @@ def append_event(event: Dict[str, Any]) -> None:
         handle.write(json.dumps(event) + "\n")
 
 
-def compute_risk(payload: Dict[str, Any], trace_id: str) -> Dict[str, Any]:
+def compute_risk(payload: Dict[str, Any], trace_id: str, events: List[Dict[str, Any]]) -> Dict[str, Any]:
     def clamp(value: int) -> int:
         return max(1, min(5, value))
 
@@ -91,6 +96,8 @@ def compute_risk(payload: Dict[str, Any], trace_id: str) -> Dict[str, Any]:
     else:
         level = "critical"
 
+    compliance_scores = compute_compliance_scores(events)
+
     return {
         "output_version": OUTPUT_VERSION,
         "governance_version": GOVERNANCE_VERSION,
@@ -105,6 +112,7 @@ def compute_risk(payload: Dict[str, Any], trace_id: str) -> Dict[str, Any]:
         },
         "risk_score": score,
         "risk_level": level,
+        "compliance": compliance_scores,
         "source": "api/audit_api.py",
     }
 
@@ -190,7 +198,8 @@ class AuditAPIHandler(BaseHTTPRequestHandler):
 
         if self.path == "/risk/score":
             try:
-                result = compute_risk(payload, trace_id)
+                events = load_events(200)
+                result = compute_risk(payload, trace_id, events)
             except ValueError:
                 self._send(HTTPStatus.BAD_REQUEST, {"error": "invalid_risk_input"}, trace_id)
                 return
