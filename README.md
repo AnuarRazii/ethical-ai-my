@@ -204,6 +204,37 @@ Contributions are welcome. Please:
 
 ---
 
+## Periodic Cross-Review and Updates
+
+To keep this reference open, auditable, and internally consistent, the repository follows a recurring cross-review process across policy documents, static pages, and release metadata.
+
+### Scope
+
+- Core policy documents: `ETHICS.md`, `GOVERNANCE.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `ATTRIBUTION.md`, `FINAL_INTENT.md`
+- Public entry points: `README.md`, `index.html`, `ethical-ai-my-archive-bilingual.html`
+- Audit and release record: `RELEASE_NOTES.md`, GitHub workflow logs, and pull requests
+
+### Source of Truth
+
+- Core policy meaning is maintained in the policy documents themselves.
+- Public-facing summary and repository navigation are maintained in `README.md`.
+- Version and release-date metadata must remain aligned across `README.md`, `index.html`, `ethical-ai-my-archive-bilingual.html`, and the policy-document footers.
+
+### Review Cadence and Ownership
+
+- Automated cross-review runs weekly through `.github/workflows/compliance.yml` and also on pushes and pull requests to `main`.
+- Repository maintainers review workflow failures and coordinate follow-up updates.
+- Contributors who change public content are expected to update every affected file in the same pull request.
+
+### Follow-Up Actions
+
+1. Investigate any workflow failure as a content-governance issue, not only as a formatting issue.
+2. Update all affected files when version, release date, or core reference wording changes.
+3. Record material reference or governance updates in `RELEASE_NOTES.md` to preserve the audit trail.
+4. Re-run validation before merge so the weekly baseline remains trustworthy.
+
+---
+
 ## Support
 
 For questions or suggestions:

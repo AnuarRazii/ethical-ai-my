@@ -16,6 +16,10 @@ jobs:
   compliance:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    env:
+      CORE_REFERENCE_STATEMENT: Open, Auditable, Non-Mandatory Reference
+      RELEASE_VERSION: "1.0"
+      RELEASE_DATE: "2026-06-01"
 
     steps:
       - uses: actions/checkout@v4
@@ -46,3 +50,47 @@ jobs:
           grep -q "Open, Auditable, Non-Mandatory Reference" README.md \
             || { echo "❌ README does not contain core reference statement"; exit 1; }
           echo "✅ Core compliance statement verified"
+
+      - name: Validate cross-file reference metadata
+        run: |
+          set -euo pipefail
+          echo "Checking version and release-date consistency..."
+
+          grep -Fq "**Version:** ${RELEASE_VERSION}" README.md \
+            || { echo "❌ README version metadata mismatch"; exit 1; }
+          grep -Fq "**Release Date:** ${RELEASE_DATE}" README.md \
+            || { echo "❌ README release date mismatch"; exit 1; }
+
+          grep -Fq "Version:</strong> ${RELEASE_VERSION} (Reference Release)" index.html \
+            || { echo "❌ index.html version metadata mismatch"; exit 1; }
+          grep -Fq "Release Date:</strong> ${RELEASE_DATE}" index.html \
+            || { echo "❌ index.html release date mismatch"; exit 1; }
+
+          grep -Fq "<strong>Version:</strong> ${RELEASE_VERSION} (Reference Release) | <strong>Date:</strong> ${RELEASE_DATE}" ethical-ai-my-archive-bilingual.html \
+            || { echo "❌ archive bilingual metadata mismatch"; exit 1; }
+
+          for file in ETHICS.md GOVERNANCE.md SECURITY.md CODE_OF_CONDUCT.md ATTRIBUTION.md FINAL_INTENT.md; do
+            grep -Fq "*Version ${RELEASE_VERSION} | Release Date: ${RELEASE_DATE}*" "$file" \
+              || { echo "❌ Metadata footer mismatch in $file"; exit 1; }
+          done
+
+          echo "✅ Release metadata is aligned across core files"
+
+      - name: Validate cross-review coverage
+        run: |
+          set -euo pipefail
+          echo "Checking cross-review coverage..."
+
+          for file in README.md index.html ethical-ai-my-archive-bilingual.html RELEASE_NOTES.md; do
+            grep -Fq "${CORE_REFERENCE_STATEMENT}" "$file" \
+              || { echo "❌ Missing core reference statement in $file"; exit 1; }
+          done
+
+          grep -Fq "## Periodic Cross-Review and Updates" README.md \
+            || { echo "❌ README periodic cross-review section missing"; exit 1; }
+          grep -Fq "## Cross-Repository Review and Update Cycle" GOVERNANCE.md \
+            || { echo "❌ GOVERNANCE periodic review section missing"; exit 1; }
+          grep -Fq "## Operations Update – Periodic Cross-Review Baseline" RELEASE_NOTES.md \
+            || { echo "❌ RELEASE_NOTES operational audit entry missing"; exit 1; }
+
+          echo "✅ Cross-review documentation coverage verified"
