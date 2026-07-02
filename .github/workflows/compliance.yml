@@ -38,6 +38,10 @@ jobs:
             "ATTRIBUTION.md"
             "FINAL_INTENT.md"
             "RELEASE_NOTES.md"
+            "governance/version.json"
+            "scripts/audit_logger.py"
+            "scripts/risk_scoring.py"
+            "api/audit_api.py"
           )
 
           for file in "${required_files[@]}"; do
@@ -83,3 +87,62 @@ jobs:
           [ "$readme_date" = "$ethics_date" ] || { echo "❌ Release date mismatch: README.md vs ETHICS.md"; exit 1; }
 
           echo "✅ Release metadata consistency verified"
+
+      - name: Advanced RZ1 production checks
+        run: |
+          set -euo pipefail
+
+          python3 scripts/audit_logger.py \
+            --event "compliance_workflow_check" \
+            --actor "github-actions" \
+            --details '{"workflow":"compliance.yml","stage":"advanced_check"}' \
+            --output /tmp/rz1_audit_log.json
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("/tmp/rz1_audit_log.json").read_text(encoding="utf-8"))
+          required = ["output_version", "governance_version", "record_type", "event_id", "trace_id", "created_at", "event", "actor", "status", "details"]
+          for key in required:
+              if key not in payload:
+                  raise SystemExit(f"❌ Missing audit log field: {key}")
+          if payload["record_type"] != "audit_event":
+              raise SystemExit("❌ Invalid audit record_type")
+          print("✅ Audit logging output is versioned and traceable")
+          PY
+
+          python3 scripts/risk_scoring.py \
+            --impact 4 \
+            --likelihood 4 \
+            --detectability 3 \
+            --control-strength 2 \
+            --context "compliance_workflow" \
+            --output /tmp/rz1_risk_score.json
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("/tmp/rz1_risk_score.json").read_text(encoding="utf-8"))
+          required = ["output_version", "governance_version", "record_type", "generated_at", "trace_id", "inputs", "risk_score", "risk_level"]
+          for key in required:
+              if key not in payload:
+                  raise SystemExit(f"❌ Missing risk score field: {key}")
+          if payload["record_type"] != "risk_assessment":
+              raise SystemExit("❌ Invalid risk record_type")
+          if not (1 <= int(payload["risk_score"]) <= 100):
+              raise SystemExit("❌ risk_score out of expected range")
+          print("✅ Risk scoring output is versioned and traceable")
+          PY
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("governance/version.json").read_text(encoding="utf-8"))
+          for key in ["output_version", "governance_version", "release_date", "traceability_standard"]:
+              if key not in payload:
+                  raise SystemExit(f"❌ governance/version.json missing: {key}")
+          print("✅ Governance version file validated")
+          PY
