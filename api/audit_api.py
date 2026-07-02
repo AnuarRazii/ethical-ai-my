@@ -17,6 +17,11 @@ from urllib.parse import parse_qs, urlparse
 # Allow running from repository root or from the api/ directory.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 from compliance_mapper import compute_compliance_scores  # noqa: E402
+from alert_engine import (  # noqa: E402
+    load_alerts,
+    process_and_store_event_alerts,
+    process_and_store_risk_alerts,
+)
 
 OUTPUT_VERSION = "RZ1-1.0"
 GOVERNANCE_VERSION = "1.0"
@@ -68,6 +73,22 @@ def load_events(limit: int = 50) -> List[Dict[str, Any]]:
                 continue
             events.append(json.loads(line))
     return events[-limit:]
+
+
+def load_events_since(since_ts: str) -> List[Dict[str, Any]]:
+    """Return all events with created_at strictly after *since_ts* (ISO 8601)."""
+    if not EVENT_STORE.exists():
+        return []
+    results: List[Dict[str, Any]] = []
+    with EVENT_STORE.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line:
+                continue
+            event = json.loads(line)
+            if event.get("created_at", "") > since_ts:
+                results.append(event)
+    return results
 
 
 def append_event(event: Dict[str, Any]) -> None:
@@ -159,12 +180,42 @@ class AuditAPIHandler(BaseHTTPRequestHandler):
                         "GET /version",
                         "GET /audit/events?limit=50",
                         "GET /audit/events/{trace_id}",
+                        "GET /audit/stream?since=<iso_timestamp>",
+                        "GET /alerts?limit=100",
                         "POST /audit/events",
                         "POST /risk/score",
                     ],
                 },
                 trace_id,
             )
+            return
+
+        if parsed.path == "/audit/stream":
+            query = parse_qs(parsed.query)
+            since_ts = query.get("since", [""])[0]
+            if not since_ts:
+                # Default: events from the last 60 seconds
+                since_ts = (
+                    dt.datetime.now(dt.timezone.utc) - dt.timedelta(seconds=60)
+                ).isoformat().replace("+00:00", "Z")
+            new_events = load_events_since(since_ts)
+            self._send(
+                HTTPStatus.OK,
+                {
+                    "since": since_ts,
+                    "server_time": utc_now(),
+                    "count": len(new_events),
+                    "events": new_events,
+                },
+                trace_id,
+            )
+            return
+
+        if parsed.path == "/alerts":
+            query = parse_qs(parsed.query)
+            limit = int(query.get("limit", ["100"])[0])
+            limit = max(1, min(500, limit))
+            self._send(HTTPStatus.OK, {"alerts": load_alerts(limit)}, trace_id)
             return
 
         if parsed.path == "/audit/events":
@@ -193,7 +244,12 @@ class AuditAPIHandler(BaseHTTPRequestHandler):
         if self.path == "/audit/events":
             event = build_event(payload, trace_id)
             append_event(event)
-            self._send(HTTPStatus.CREATED, {"event": event}, trace_id)
+            triggered_alerts = process_and_store_event_alerts(event)
+            self._send(
+                HTTPStatus.CREATED,
+                {"event": event, "alerts_triggered": len(triggered_alerts)},
+                trace_id,
+            )
             return
 
         if self.path == "/risk/score":
@@ -203,7 +259,12 @@ class AuditAPIHandler(BaseHTTPRequestHandler):
             except ValueError:
                 self._send(HTTPStatus.BAD_REQUEST, {"error": "invalid_risk_input"}, trace_id)
                 return
-            self._send(HTTPStatus.OK, {"risk": result}, trace_id)
+            triggered_alerts = process_and_store_risk_alerts(result)
+            self._send(
+                HTTPStatus.OK,
+                {"risk": result, "alerts_triggered": len(triggered_alerts)},
+                trace_id,
+            )
             return
 
         self._send(HTTPStatus.NOT_FOUND, {"error": "not_found"}, trace_id)
