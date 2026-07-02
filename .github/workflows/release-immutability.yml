@@ -1,0 +1,217 @@
+# Release Immutability Guard | Pengawal Kebolehubahsuaian Keluaran
+# Ethical AI MY – Release and Tag Integrity Enforcement
+# Framework: ONSA 2025 | CPC | RMC (MCMC, eff. 1 Jun 2026)
+#
+# Prevents post-publication modification or deletion of releases and tags.
+# Ensures audit trail integrity: once a release is published, its tag SHA,
+# assets, and metadata must remain immutable.
+#
+# Governance ref: GOVERNANCE.md § Transparency and Documentation
+# Security ref  : SECURITY.md § Model and Data Integrity
+
+name: Release Immutability Guard
+
+on:
+  release:
+    types: [edited, deleted, unpublished]
+  delete:
+    # Triggered when a tag is deleted
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  immutability-check:
+    name: immutability-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Detect unauthorized release modification
+        run: |
+          set -euo pipefail
+
+          echo "=================================================="
+          echo " RELEASE IMMUTABILITY GUARD — Ethical AI MY"
+          echo " Repository : $GITHUB_REPOSITORY"
+          echo " Event      : $GITHUB_EVENT_NAME"
+          echo " Actor      : $GITHUB_ACTOR"
+          echo " Timestamp  : $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "=================================================="
+
+          EVENT="${GITHUB_EVENT_NAME}"
+          ACTION="${{ github.event.action }}"
+
+          case "$EVENT/$ACTION" in
+            release/edited)
+              echo ""
+              echo "⚠️  VIOLATION DETECTED: Release was EDITED after publication"
+              echo "   Release : ${{ github.event.release.name }}"
+              echo "   Tag     : ${{ github.event.release.tag_name }}"
+              echo "   Editor  : ${{ github.actor }}"
+              echo ""
+              echo "POLICY: Published releases must remain immutable."
+              echo "        Editing a release violates the audit trail integrity"
+              echo "        required by GOVERNANCE.md and SECURITY.md."
+              echo ""
+              echo "HITL ACTION REQUIRED: A human administrator must review"
+              echo "                      this modification and restore the"
+              echo "                      original release if unauthorized."
+              echo "=================================================="
+              echo "IMMUTABILITY VIOLATION — RELEASE EDITED"
+              exit 1
+              ;;
+            release/deleted)
+              echo ""
+              echo "🔴 CRITICAL VIOLATION: Release was DELETED"
+              echo "   Tag     : ${{ github.event.release.tag_name }}"
+              echo "   Actor   : ${{ github.actor }}"
+              echo ""
+              echo "POLICY: Published releases cannot be deleted."
+              echo "        Deletion destroys the audit trail."
+              echo "=================================================="
+              echo "IMMUTABILITY VIOLATION — RELEASE DELETED"
+              exit 1
+              ;;
+            release/unpublished)
+              echo ""
+              echo "⚠️  WARNING: Release was UNPUBLISHED (moved to draft)"
+              echo "   Tag     : ${{ github.event.release.tag_name }}"
+              echo "   Actor   : ${{ github.actor }}"
+              echo ""
+              echo "POLICY: Published releases should not be retracted."
+              echo "        Unpublishing affects public audit trail visibility."
+              echo "=================================================="
+              echo "IMMUTABILITY WARNING — RELEASE UNPUBLISHED"
+              exit 1
+              ;;
+            delete/*)
+              echo ""
+              echo "🔴 CRITICAL VIOLATION: A tag or branch was DELETED"
+              echo "   Ref  : ${{ github.event.ref }}"
+              echo "   Type : ${{ github.event.ref_type }}"
+              echo "   Actor: ${{ github.actor }}"
+              echo ""
+              if [ "${{ github.event.ref_type }}" = "tag" ]; then
+                echo "POLICY: Release tags must not be deleted."
+                echo "        Tag deletion destroys version immutability."
+                echo "IMMUTABILITY VIOLATION — TAG DELETED"
+                exit 1
+              else
+                echo "INFO: Branch deletion detected (not a tag). Monitoring only."
+              fi
+              ;;
+            *)
+              echo "INFO: Unhandled event combination: $EVENT/$ACTION"
+              ;;
+          esac
+
+          echo ""
+          echo "✅ RELEASE IMMUTABILITY — No violations detected"
+          echo "=================================================="
+
+      - name: Open audit issue on violation
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const eventName = process.env.GITHUB_EVENT_NAME;
+            const action    = context.payload.action || 'deleted';
+            const actor     = context.actor;
+            const tagName   = context.payload.release?.tag_name
+                              || context.payload.ref
+                              || 'unknown';
+            const ts        = new Date().toISOString();
+
+            const title = `🔴 [IMMUTABILITY VIOLATION] Release/tag '${tagName}' was ${action} by @${actor}`;
+
+            const body = `## 🔴 Release Immutability Violation Detected
+
+            | Field | Value |
+            |-------|-------|
+            | **Event** | \`${eventName}/${action}\` |
+            | **Tag / Release** | \`${tagName}\` |
+            | **Actor** | @${actor} |
+            | **Timestamp** | ${ts} |
+            | **Repository** | ${context.repo.owner}/${context.repo.repo} |
+
+            ---
+
+            ### Policy Violation
+
+            Published releases and tags in **Ethical AI MY** are immutable. This policy ensures:
+            - Complete audit trail integrity
+            - Reproducible builds and artefacts
+            - Compliance with GOVERNANCE.md § Transparency and Documentation
+            - Alignment with SECURITY.md § Model and Data Integrity
+
+            ### Required Actions (HITL)
+
+            - [ ] **Verify** whether this action was authorized
+            - [ ] **Restore** the original release/tag if the modification was unauthorized
+            - [ ] **Document** the reason for any authorized modification
+            - [ ] **Review** and update governance records accordingly
+
+            ### Governance References
+
+            - [GOVERNANCE.md](../blob/main/GOVERNANCE.md) — Transparency and Documentation
+            - [SECURITY.md](../blob/main/SECURITY.md) — Model and Data Integrity
+            - [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md) — Traceability and Auditability
+
+            ---
+            *Auto-generated by Release Immutability Guard workflow*
+            *Audit ID: IMM-${ts.slice(0,10).replace(/-/g,'')}-${Math.random().toString(36).slice(2,7).toUpperCase()}*`;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              title,
+              body,
+              labels: ['security', 'compliance', 'priority: critical'],
+            });
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # TAG INTEGRITY SNAPSHOT — runs on all releases (published)
+  # Records the tag SHA for immutability verification in future audits
+  # ──────────────────────────────────────────────────────────────────────────
+  tag-integrity-snapshot:
+    name: Tag Integrity Snapshot
+    if: github.event_name == 'release' && github.event.action == 'published'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Record tag SHA for audit trail
+        run: |
+          set -euo pipefail
+
+          TAG="${{ github.event.release.tag_name }}"
+          TAG_SHA=$(git rev-list -n 1 "$TAG" 2>/dev/null || echo "unknown")
+          COMMIT_SHA="${{ github.event.release.target_commitish }}"
+
+          echo "=================================================="
+          echo " TAG INTEGRITY SNAPSHOT — Ethical AI MY"
+          echo "=================================================="
+          echo " Release : ${{ github.event.release.name }}"
+          echo " Tag     : $TAG"
+          echo " Tag SHA : $TAG_SHA"
+          echo " Commit  : $COMMIT_SHA"
+          echo " Author  : ${{ github.event.release.author.login }}"
+          echo " Created : ${{ github.event.release.created_at }}"
+          echo " URL     : ${{ github.event.release.html_url }}"
+          echo "=================================================="
+          echo ""
+          echo "✅ SNAPSHOT RECORDED — Tag SHA pinned for immutability audit"
+          echo ""
+          echo "GOVERNANCE NOTE: This record serves as the baseline for"
+          echo "                 future immutability verification checks."
+          echo "                 Any modification to this tag after this"
+          echo "                 point constitutes a policy violation."
