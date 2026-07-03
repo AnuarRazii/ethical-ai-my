@@ -84,7 +84,11 @@ jobs:
           echo " SUMMARY: Checked $CHECKED commit(s)"
           echo "=================================================="
 
-          if [ ${#MISSING_COMMITS[@]} -gt 0 ]; then
+          if [ "$CHECKED" -eq 0 ]; then
+            echo ""
+            echo "⚠️  DCO CHECK WARNING — No commits found between origin/${{ github.base_ref }} and HEAD"
+            echo "dco_passed=true" >> "$GITHUB_OUTPUT"
+          elif [ ${#MISSING_COMMITS[@]} -gt 0 ]; then
             echo ""
             echo "❌ DCO CHECK FAILED"
             echo ""
