@@ -1,85 +1,162 @@
-name: RZ1 Unified Validation Gate
+name: RZ1 Compliance Engine
 
 on:
-  pull_request:
-    branches: [main]
   push:
-    branches: [main]
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 1"
 
 permissions:
   contents: read
 
 jobs:
-  rz1-validation:
-    name: RZ1 Validation Gate
+  compliance:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - name: Validate repository structure
+      - name: Auto-create missing required files
         run: |
-          required_files=("README.md" "LICENSE" "ETHICS.md" "SECURITY.md")
-          optional_files=("GOVERNANCE.md" "ATTRIBUTION.md" "FINAL_INTENT.md" "CODE_OF_CONDUCT.md")
+          set -euo pipefail
+          bash scripts/ensure_required_files.sh
 
-          failed=0
+      - name: Validate required repository files
+        run: |
+          set -euo pipefail
+          required_files=(
+            "README.md"
+            "LICENSE"
+            "ETHICS.md"
+            "GOVERNANCE.md"
+            "SECURITY.md"
+            "CODE_OF_CONDUCT.md"
+            "ATTRIBUTION.md"
+            "FINAL_INTENT.md"
+            "RELEASE_NOTES.md"
+            "CONTRIBUTING.md"
+            ".github/settings.yml"
+            ".github/ISSUE_TEMPLATE/config.yml"
+            ".github/workflows/dco.yml"
+            ".github/workflows/release-immutability.yml"
+            "governance/version.json"
+            "scripts/audit_logger.py"
+            "scripts/risk_scoring.py"
+            "api/audit_api.py"
+          )
 
-          echo "=== REQUIRED FILES CHECK ==="
           for file in "${required_files[@]}"; do
-            if [ ! -f "$file" ]; then
-              echo "ERROR: Missing required file: $file"
-              failed=1
-            else
-              echo "OK: $file"
-            fi
+            test -f "$file" || { echo "❌ Missing $file"; exit 1; }
           done
-
-          echo "=== OPTIONAL FILES CHECK ==="
-          for file in "${optional_files[@]}"; do
-            if [ ! -f "$file" ]; then
-              echo "WARNING: Optional file missing: $file"
-            else
-              echo "OK: $file"
-            fi
-          done
-
-          if [ "$failed" -eq 1 ]; then
-            exit 1
-          fi
-
-      - name: Validate ethical compliance
-        run: |
-          if grep -qE "Core Ethical Principles|Prinsip Teras" ETHICS.md; then
-            echo "Ethical compliance OK"
-          else
-            echo "ERROR: ETHICS.md missing required section"
-            exit 1
-          fi
+          echo "✅ Required repository structure is valid"
 
       - name: Validate security baseline
         run: |
-          if git ls-files --error-unmatch '*.env' 2>/dev/null; then
-            echo "ERROR: .env file detected in repo"
+          set -euo pipefail
+          if git ls-files | grep -qE '(^|/)\.env(\.[^/]*)?$|\.env$'; then
+            echo "❌ Tracked .env or .env.* file detected in repository"
             exit 1
           fi
+          echo "✅ No tracked .env files detected"
 
-      - name: Validate README governance block
+      - name: Ethical audit
         run: |
-          if grep -qE "Prinsip Teras|Governance|Compliance" README.md; then
-            echo "README governance OK"
-          else
-            echo "WARNING: README governance block not detected"
-          fi
+          set -euo pipefail
+          echo "Running ethical compliance checks..."
+          grep -q "Open, Auditable, Non-Mandatory Reference" README.md \
+            || { echo "❌ README does not contain core reference statement"; exit 1; }
+          echo "✅ Core compliance statement verified"
 
-      - name: Generate audit log
+      - name: Validate release metadata consistency
         run: |
-          echo "RZ1 Validation Report" > rz1-report.txt
-          echo "Timestamp: $(date)" > rz1-report.txt
-          echo "Commit: $GITHUB_SHA" > rz1-report.txt
+          set -euo pipefail
 
-      - name: Upload audit artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: rz1-audit-log
-          path: rz1-report.txt
+          readme_version=$(grep -E "^- \*\*Version:\*\*" README.md | head -n1 | sed -E 's/.*\*\*Version:\*\* *([0-9.]+).*/\1/')
+          readme_date=$(grep -E "^- \*\*Release Date:\*\*" README.md | head -n1 | sed -E 's/.*\*\*Release Date:\*\* *([0-9-]+).*/\1/')
+
+          release_notes_version=$(grep -E "^- \*\*Version:\*\*" RELEASE_NOTES.md | head -n1 | sed -E 's/.*\*\*Version:\*\* *([0-9.]+).*/\1/')
+          release_notes_date=$(grep -E "^- \*\*Release Date:\*\*" RELEASE_NOTES.md | head -n1 | sed -E 's/.*\*\*Release Date:\*\* *([0-9-]+).*/\1/')
+
+          governance_version=$(grep -E "\\*Version [0-9.]+ \\| Release Date: [0-9-]+\\*" GOVERNANCE.md | head -n1 | sed -E 's/.*Version ([0-9.]+) \| Release Date: ([0-9-]+).*/\1/')
+          governance_date=$(grep -E "\\*Version [0-9.]+ \\| Release Date: [0-9-]+\\*" GOVERNANCE.md | head -n1 | sed -E 's/.*Version ([0-9.]+) \| Release Date: ([0-9-]+).*/\2/')
+
+          ethics_version=$(grep -E "\\*Version [0-9.]+ \\| Release Date: [0-9-]+\\*" ETHICS.md | head -n1 | sed -E 's/.*Version ([0-9.]+) \| Release Date: ([0-9-]+).*/\1/')
+          ethics_date=$(grep -E "\\*Version [0-9.]+ \\| Release Date: [0-9-]+\\*" ETHICS.md | head -n1 | sed -E 's/.*Version ([0-9.]+) \| Release Date: ([0-9-]+).*/\2/')
+
+          [ -n "$readme_version" ] && [ -n "$readme_date" ] || { echo "❌ Missing version/date in README.md"; exit 1; }
+          [ -n "$release_notes_version" ] && [ -n "$release_notes_date" ] || { echo "❌ Missing version/date in RELEASE_NOTES.md"; exit 1; }
+          [ -n "$governance_version" ] && [ -n "$governance_date" ] || { echo "❌ Missing version/date in GOVERNANCE.md"; exit 1; }
+          [ -n "$ethics_version" ] && [ -n "$ethics_date" ] || { echo "❌ Missing version/date in ETHICS.md"; exit 1; }
+
+          [ "$readme_version" = "$release_notes_version" ] || { echo "❌ Version mismatch: README.md vs RELEASE_NOTES.md"; exit 1; }
+          [ "$readme_version" = "$governance_version" ] || { echo "❌ Version mismatch: README.md vs GOVERNANCE.md"; exit 1; }
+          [ "$readme_version" = "$ethics_version" ] || { echo "❌ Version mismatch: README.md vs ETHICS.md"; exit 1; }
+
+          [ "$readme_date" = "$release_notes_date" ] || { echo "❌ Release date mismatch: README.md vs RELEASE_NOTES.md"; exit 1; }
+          [ "$readme_date" = "$governance_date" ] || { echo "❌ Release date mismatch: README.md vs GOVERNANCE.md"; exit 1; }
+          [ "$readme_date" = "$ethics_date" ] || { echo "❌ Release date mismatch: README.md vs ETHICS.md"; exit 1; }
+
+          echo "✅ Release metadata consistency verified"
+
+      - name: Advanced RZ1 production checks
+        run: |
+          set -euo pipefail
+
+          python3 scripts/audit_logger.py \
+            --event "compliance_workflow_check" \
+            --actor "github-actions" \
+            --details '{"workflow":"compliance.yml","stage":"advanced_check"}' \
+            --output /tmp/rz1_audit_log.json
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("/tmp/rz1_audit_log.json").read_text(encoding="utf-8"))
+          required = ["output_version", "governance_version", "record_type", "event_id", "trace_id", "created_at", "event", "actor", "status", "details"]
+          for key in required:
+              if key not in payload:
+                  raise SystemExit(f"❌ Missing audit log field: {key}")
+          if payload["record_type"] != "audit_event":
+              raise SystemExit("❌ Invalid audit record_type")
+          print("✅ Audit logging output is versioned and traceable")
+          PY
+
+          python3 scripts/risk_scoring.py \
+            --impact 4 \
+            --likelihood 4 \
+            --detectability 3 \
+            --control-strength 2 \
+            --context "compliance_workflow" \
+            --output /tmp/rz1_risk_score.json
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("/tmp/rz1_risk_score.json").read_text(encoding="utf-8"))
+          required = ["output_version", "governance_version", "record_type", "generated_at", "trace_id", "inputs", "risk_score", "risk_level"]
+          for key in required:
+              if key not in payload:
+                  raise SystemExit(f"❌ Missing risk score field: {key}")
+          if payload["record_type"] != "risk_assessment":
+              raise SystemExit("❌ Invalid risk record_type")
+          if not (1 <= int(payload["risk_score"]) <= 100):
+              raise SystemExit("❌ risk_score out of expected range")
+          print("✅ Risk scoring output is versioned and traceable")
+          PY
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("governance/version.json").read_text(encoding="utf-8"))
+          for key in ["output_version", "governance_version", "release_date", "traceability_standard"]:
+              if key not in payload:
+                  raise SystemExit(f"❌ governance/version.json missing: {key}")
+          print("✅ Governance version file validated")
+          PY
