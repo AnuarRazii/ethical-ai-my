@@ -71,8 +71,9 @@ jobs:
             echo "   Author : $commit_author"
 
             if echo "$commit_msg" | grep -qiE "^Signed-off-by: .+ <.+@.+>"; then
-              signoff=$(echo "$commit_msg" | grep -iE "^Signed-off-by:" | head -1)
-              echo "   DCO    : ✅ $signoff"
+              while IFS= read -r signoff; do
+                echo "   DCO    : ✅ $signoff"
+              done < <(echo "$commit_msg" | grep -iE "^Signed-off-by:")
             else
               echo "   DCO    : ❌ MISSING — No valid 'Signed-off-by:' trailer found"
               MISSING_COMMITS+=("${commit_sha:0:10} — $commit_subject")
@@ -84,7 +85,11 @@ jobs:
           echo " SUMMARY: Checked $CHECKED commit(s)"
           echo "=================================================="
 
-          if [ ${#MISSING_COMMITS[@]} -gt 0 ]; then
+          if [ "$CHECKED" -eq 0 ]; then
+            echo ""
+            echo "⚠️  DCO CHECK WARNING — No commits found between origin/${{ github.base_ref }} and HEAD"
+            echo "dco_passed=true" >> "$GITHUB_OUTPUT"
+          elif [ ${#MISSING_COMMITS[@]} -gt 0 ]; then
             echo ""
             echo "❌ DCO CHECK FAILED"
             echo ""
