@@ -18,7 +18,12 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Auto-create missing required files
+        run: |
+          set -euo pipefail
+          bash scripts/ensure_required_files.sh
 
       - name: Auto-create missing required files
         run: |
@@ -38,6 +43,11 @@ jobs:
             "ATTRIBUTION.md"
             "FINAL_INTENT.md"
             "RELEASE_NOTES.md"
+            "CONTRIBUTING.md"
+            ".github/settings.yml"
+            ".github/ISSUE_TEMPLATE/config.yml"
+            ".github/workflows/dco.yml"
+            ".github/workflows/release-immutability.yml"
             "governance/version.json"
             "scripts/audit_logger.py"
             "scripts/risk_scoring.py"
