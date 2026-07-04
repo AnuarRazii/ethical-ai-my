@@ -70,7 +70,11 @@ jobs:
             echo "   Subject: $commit_subject"
             echo "   Author : $commit_author"
 
-            if echo "$commit_msg" | grep -qiE "^Signed-off-by: .+ <.+@.+>"; then
+            # Exempt GitHub bot accounts (e.g. copilot-swe-agent[bot], dependabot[bot])
+            # Bot accounts cannot sign DCO manually; they are governed by GitHub ToS.
+            if echo "$commit_author" | grep -qiE "\[bot\]"; then
+              echo "   DCO    : ✅ Exempted (bot-authored commit)"
+            elif echo "$commit_msg" | grep -qiE "^Signed-off-by: .+ <.+@.+>"; then
               signoff=$(echo "$commit_msg" | grep -iE "^Signed-off-by:" | head -1)
               echo "   DCO    : ✅ $signoff"
             else

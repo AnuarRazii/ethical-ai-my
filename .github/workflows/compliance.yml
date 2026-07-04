@@ -25,6 +25,11 @@ jobs:
           set -euo pipefail
           bash scripts/ensure_required_files.sh
 
+      - name: Auto-create missing required files
+        run: |
+          set -euo pipefail
+          bash scripts/ensure_required_files.sh
+
       - name: Validate required repository files
         run: |
           set -euo pipefail
