@@ -43,7 +43,7 @@ jobs:
 
             if [ -n "$REAL" ]; then
               echo "FAIL: Real credentials detected in .env"
-              echo "$REAL"
+              echo "$REAL" | sed -E 's/=.*$/=<redacted>/'
               exit 1
             else
               echo "PASS: .env contains template/placeholder values only"
