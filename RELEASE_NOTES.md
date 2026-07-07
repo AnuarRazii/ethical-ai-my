@@ -14,6 +14,7 @@ Ethical AI MY v1.0 represents the initial comprehensive reference release for re
 - **SECURITY.md** – Security standards and risk management framework
 - **CODE_OF_CONDUCT.md** – Community guidelines and standards
 - **ATTRIBUTION.md** – Recognition and citation framework
+- **AUDIT_TRANSPARENCY.md** – Cross-Audit Transparency Layer (APDP 2010 compliance, JPDP readiness)
 - **FINAL_INTENT.md** – Statement of purpose and long-term vision
 
 ### Supporting Materials
