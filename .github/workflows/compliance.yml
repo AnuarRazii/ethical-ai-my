@@ -1,17 +1,11 @@
 name: RZ1 Compliance Engine
 
 on:
-  pull_request:
-    branches: [main]
   push:
-<<<<<<< HEAD
-    branches: [main]
-=======
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
->>>>>>> origin/main
   schedule:
     - cron: "0 3 * * 1"
 
@@ -21,9 +15,6 @@ permissions:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
-permissions:
-  contents: read
 
 jobs:
   compliance:
@@ -36,16 +27,6 @@ jobs:
 
       - name: Auto-create missing required files
         run: |
-<<<<<<< HEAD
-          FAILED=0
-          test -f README.md || { echo "FAIL: Missing README.md"; FAILED=1; }
-          test -f LICENSE || { echo "FAIL: Missing LICENSE"; FAILED=1; }
-          if [ "$FAILED" -ne 0 ]; then
-            echo "FAIL: Required files missing"
-            exit 1
-          fi
-          echo "PASS: Required files present"
-=======
           set -euo pipefail
           bash scripts/ensure_required_files.sh
 
@@ -77,15 +58,11 @@ jobs:
             test -f "$file" || { echo "❌ Missing $file"; exit 1; }
           done
           echo "✅ Required repository structure is valid"
->>>>>>> origin/main
 
       - name: Ethical audit
         run: |
           set -euo pipefail
           echo "Running ethical compliance checks..."
-<<<<<<< HEAD
-          echo "PASS: Ethical compliance checks passed"
-=======
           grep -q "Open, Auditable, Non-Mandatory Reference" README.md \
             || { echo "❌ README does not contain core reference statement"; exit 1; }
           echo "✅ Core compliance statement verified"
@@ -179,4 +156,3 @@ jobs:
                   raise SystemExit(f"❌ governance/version.json missing: {key}")
           print("✅ Governance version file validated")
           PY
->>>>>>> origin/main

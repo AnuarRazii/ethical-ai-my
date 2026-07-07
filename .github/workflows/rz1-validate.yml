@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
 
@@ -36,14 +36,14 @@ jobs:
           else
             echo "WARNING: Tracked .env file found - $TRACKED"
 
-            REAL=$(grep -vE "^\s*(#|$)" $TRACKED 2>/dev/null \
+            REAL_COUNT=$(grep -vE "^\s*(#|$)" $TRACKED 2>/dev/null \
               | grep -E "^[A-Z_]+=.+" \
-              | grep -ivE "(example|placeholder|changeme|your_|dummy|test)" \
+              | grep -civE "(example|placeholder|changeme|your_|dummy|test)" \
               || true)
 
-            if [ -n "$REAL" ]; then
-              echo "FAIL: Real credentials detected in .env"
-              echo "$REAL" | sed -E 's/=.*$/=<redacted>/'
+            if [ "${REAL_COUNT:-0}" -gt 0 ]; then
+              echo "FAIL: Real credentials detected in .env (${REAL_COUNT} non-placeholder variable(s) found)"
+              echo "      Review tracked .env files and remove or redact any real credentials."
               exit 1
             else
               echo "PASS: .env contains template/placeholder values only"
