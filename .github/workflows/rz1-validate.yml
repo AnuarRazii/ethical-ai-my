@@ -70,6 +70,7 @@ jobs:
           fi
 
       - name: Validate summary
+        if: always()
         run: |
           echo "=================================================="
           echo " RZ1 VALIDATE - SUMMARY"
@@ -78,5 +79,5 @@ jobs:
           echo " Commit SHA : ${GITHUB_SHA:0:10}"
           echo " Timestamp  : $(date -u +%Y-%m-%dT%H:%M:%SZ)"
           echo "--------------------------------------------------"
-          echo " STATUS: PASSED"
+          echo " STATUS: ${{ job.status }}"
           echo "=================================================="
