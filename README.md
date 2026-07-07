@@ -2,6 +2,19 @@
 
 **Open, Auditable, Non-Mandatory Reference for Ethical AI in Malaysia**
 
+## Prinsip Teras
+
+Repositori ini adalah **Open, Auditable, Non-Mandatory Reference** untuk tadbir urus AI bertanggungjawab di Malaysia. Setiap komponen boleh disemak secara terbuka, setiap keputusan mempunyai jejak audit yang lengkap, dan penggunaan adalah pilihan bebas komuniti.
+
+| Prinsip | Maksud |
+|---------|--------|
+| **Open** | Kod dan dasar terbuka untuk semua |
+| **Auditable** | Setiap perubahan mempunyai audit trail |
+| **Non-Mandatory Reference** | Rujukan, bukan standard wajib |
+
+> Pematuhan: ONSA 2025 \| CPC \| RMC (berkuat kuasa 1 Jun 2026)  
+> Direktif HITL aktif — manusia sentiasa dalam kawalan.
+
 ---
 
 ## Overview
@@ -118,6 +131,14 @@ ethical-ai-my/
 ├── FINAL_INTENT.md
 ├── ethical-ai-my-archive-bilingual.html
 ├── ethical-ai-my-diagram-monochrome-bilingual.svg
+├── governance/
+│   └── version.json
+├── scripts/
+│   ├── ensure_required_files.sh
+│   ├── audit_logger.py
+│   └── risk_scoring.py
+├── api/
+│   └── audit_api.py
 └── .github/
     ├── PULL_REQUEST_TEMPLATE.md
     └── ISSUE_TEMPLATE/
@@ -137,6 +158,13 @@ All frameworks, policies, and decisions are fully documented and available for i
 
 ### ✓ Non-Mandatory
 This reference is guidance and best practice, not binding regulation. Organizations are encouraged to adopt, adapt, or extend these principles.
+
+### ✓ RZ1 Production Traceability
+RZ1 production components now include:
+- JSON audit logging (`scripts/audit_logger.py`)
+- Risk scoring output (`scripts/risk_scoring.py`)
+- Audit tracking API endpoints (`api/audit_api.py`)
+- Version and traceability metadata (`governance/version.json`)
 
 ---
 
