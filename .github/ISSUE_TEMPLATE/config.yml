@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "💬 Perbincangan Komuniti | Community Discussions"
+    url: https://github.com/AnuarRazii/ethical-ai-my/discussions
+    about: "Untuk soalan umum, perbincangan, atau cadangan yang tidak memerlukan tindakan segera. | For general questions, discussions, or suggestions that don't require immediate action."
+  - name: "🔐 Laporan Keselamatan Sensitif | Sensitive Security Reports"
+    url: https://github.com/AnuarRazii/ethical-ai-my/security/advisories/new
+    about: "Untuk kerentanan keselamatan kritikal yang tidak boleh didedahkan secara awam. Gunakan GitHub Security Advisories. | For critical security vulnerabilities that cannot be disclosed publicly. Use GitHub Security Advisories."
+  - name: "📖 Panduan Sumbangan | Contributing Guide"
+    url: https://github.com/AnuarRazii/ethical-ai-my/blob/main/CONTRIBUTING.md
+    about: "Baca panduan sumbangan lengkap sebelum membuka isu. | Read the full contributing guide before opening an issue."
