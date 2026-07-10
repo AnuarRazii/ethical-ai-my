@@ -4,6 +4,10 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
 
 jobs:
   audit:
@@ -11,16 +15,17 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Basic audit scan
         run: |
+          set -euo pipefail
           echo "Running audit..."
-          if grep -r "API_KEY" .; then
+          if grep -r -q --exclude-dir=".git" --exclude-dir=".github" -- "API_KEY" .; then
             echo "⚠️ Potential secret detected"
-          else
-            echo "✅ No secrets found"
+            exit 1
           fi
+          echo "✅ No secrets found"
 
       - name: Compliance log
         run: echo "RZ1 Compliance Check Passed"
