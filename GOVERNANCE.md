@@ -103,7 +103,7 @@ Stakeholders have autonomous decision-making authority within their context, bou
 
 ---
 
-## Cross-Repository Review and Update Cycle
+## Cross-File Review and Update Cycle
 
 To support whole-of-repository review, Ethical AI MY applies the same transparency and accountability principles across documents, static publishing assets, and release records.
 
