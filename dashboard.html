@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en-MY">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="RZ1 Governance Dashboard — Audit logs and risk scores">
+    <meta name="author" content="Ethical AI MY Contributors">
+    <title>RZ1 Governance Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 30px 20px; }
+
+        /* ── Header ──────────────────────────────────────────── */
+        header {
+            background: white;
+            padding: 32px 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        header h1 { font-size: 1.9em; color: #2c3e50; }
+        header p  { color: #7f8c8d; font-size: 0.95em; margin-top: 4px; }
+
+        .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+        /* ── API config bar ──────────────────────────────────── */
+        .config-bar {
+            background: white;
+            padding: 14px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .config-bar label { font-size: 0.88em; color: #555; white-space: nowrap; }
+        .config-bar input {
+            flex: 1;
+            min-width: 200px;
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #333;
+        }
+        .config-bar input:focus { outline: none; border-color: #3498db; }
+
+        /* ── Buttons ─────────────────────────────────────────── */
+        button {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: opacity .15s;
+        }
+        button:hover { opacity: .85; }
+        .btn-primary   { background: #3498db; color: white; }
+        .btn-secondary { background: #ecf0f1; color: #2c3e50; }
+        .btn-danger    { background: #e74c3c; color: white; }
+        button:disabled { opacity: .5; cursor: not-allowed; }
+
+        /* ── Cards ───────────────────────────────────────────── */
+        .card {
+            background: white;
+            padding: 28px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .card-header h2 {
+            font-size: 1.15em;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 6px;
+        }
+
+        /* ── Status badges ───────────────────────────────────── */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.78em;
+            font-weight: 700;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+        }
+        .badge-pass    { background: #27ae60; color: white; }
+        .badge-fail    { background: #e74c3c; color: white; }
+        .badge-warn    { background: #f39c12; color: white; }
+        .badge-info    { background: #3498db; color: white; }
+        .badge-neutral { background: #95a5a6; color: white; }
+
+        /* ── Summary tiles ───────────────────────────────────── */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .tile {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 20px;
+            text-align: center;
+        }
+        .tile .tile-value { font-size: 2em; font-weight: 700; color: #2c3e50; }
+        .tile .tile-label { font-size: 0.82em; color: #7f8c8d; margin-top: 4px; }
+
+        /* ── Risk score panel ────────────────────────────────── */
+        .risk-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+        .risk-input-group label {
+            display: block;
+            font-size: 0.83em;
+            color: #555;
+            margin-bottom: 4px;
+        }
+        .risk-input-group input[type="range"] {
+            width: 100%;
+            accent-color: #3498db;
+        }
+        .risk-input-group .range-val {
+            font-size: 0.82em;
+            color: #3498db;
+            font-weight: 700;
+            float: right;
+        }
+
+        .risk-result {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 18px 20px;
+            border-radius: 6px;
+            background: #f8f9fa;
+            flex-wrap: wrap;
+        }
+        .risk-score-big { font-size: 2.8em; font-weight: 800; }
+        .risk-score-big.low        { color: #27ae60; }
+        .risk-score-big.moderate   { color: #2980b9; }
+        .risk-score-big.high       { color: #f39c12; }
+        .risk-score-big.very_high  { color: #e67e22; }
+        .risk-score-big.critical   { color: #e74c3c; }
+
+        .risk-level-label { font-size: 1.05em; color: #555; }
+        .risk-level-label strong { text-transform: capitalize; }
+
+        /* ── Audit log table ─────────────────────────────────── */
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.88em; }
+        thead th {
+            background: #2c3e50;
+            color: white;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        tbody tr:nth-child(even) { background: #f8f9fa; }
+        tbody tr:hover { background: #eaf4fd; }
+        tbody td { padding: 9px 12px; vertical-align: middle; border-bottom: 1px solid #ecf0f1; }
+        .event-details {
+            max-width: 240px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        /* ── Alerts / status messages ────────────────────────── */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            margin-bottom: 14px;
+        }
+        .alert-info    { background: #eaf4fd; border-left: 4px solid #3498db; color: #1a5276; }
+        .alert-error   { background: #fdecea; border-left: 4px solid #e74c3c; color: #922b21; }
+        .alert-success { background: #eafaf1; border-left: 4px solid #27ae60; color: #1e6b3c; }
+        .alert-warn    { background: #fef9e7; border-left: 4px solid #f39c12; color: #7d6608; }
+
+        /* ── Loading spinner ─────────────────────────────────── */
+        .spinner {
+            display: inline-block;
+            width: 18px; height: 18px;
+            border: 3px solid #ddd;
+            border-top-color: #3498db;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Footer ──────────────────────────────────────────── */
+        footer { text-align: center; padding: 16px; color: #95a5a6; font-size: 0.85em; }
+        footer a { color: #3498db; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+
+        /* ── Demo banner ─────────────────────────────────────── */
+        .demo-notice {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 10px 16px;
+            font-size: 0.86em;
+            color: #7d6608;
+            margin-bottom: 18px;
+        }
+
+        @media (max-width: 600px) {
+            header { flex-direction: column; }
+            .config-bar { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- ── Header ───────────────────────────────────────────── -->
+    <header>
+        <div>
+            <h1>🛡️ RZ1 Governance Dashboard</h1>
+            <p>Ethical AI MY — Audit &amp; Risk Monitoring</p>
+        </div>
+        <div class="header-actions">
+            <span id="api-status-badge" class="badge badge-neutral">● Checking…</span>
+            <a href="index.html"><button class="btn-secondary">← Home</button></a>
+        </div>
+    </header>
+
+    <!-- ── API config ────────────────────────────────────────── -->
+    <div class="config-bar">
+        <label for="api-base">API Base URL:</label>
+        <input id="api-base" type="text" value="http://localhost:8080" placeholder="http://localhost:8080">
+        <button class="btn-primary" onclick="refresh()">Refresh</button>
+        <button class="btn-secondary" onclick="loadDemo()">Demo Mode</button>
+    </div>
+
+    <div id="demo-notice" class="demo-notice" style="display:none;">
+        ⚠️ <strong>Demo mode:</strong> Showing sample data. Start the API server (<code>python api/audit_api.py</code>) and click <em>Refresh</em> to load live data.
+    </div>
+
+    <!-- ── Summary tiles ─────────────────────────────────────── -->
+    <div class="summary-grid">
+        <div class="tile">
+            <div class="tile-value" id="tile-total">—</div>
+            <div class="tile-label">Total Events</div>
+        </div>
+        <div class="tile">
+            <div class="tile-value" id="tile-pass" style="color:#27ae60">—</div>
+            <div class="tile-label">PASS</div>
+        </div>
+        <div class="tile">
+            <div class="tile-value" id="tile-fail" style="color:#e74c3c">—</div>
+            <div class="tile-label">FAIL</div>
+        </div>
+        <div class="tile">
+            <div class="tile-value" id="tile-risk">—</div>
+            <div class="tile-label">Risk Score</div>
+        </div>
+        <div class="tile">
+            <div class="tile-value" id="tile-level" style="font-size:1.1em">—</div>
+            <div class="tile-label">Risk Level</div>
+        </div>
+    </div>
+
+    <!-- ── Risk Score Panel ──────────────────────────────────── -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Risk Score Calculator</h2>
+            <button class="btn-primary" id="risk-btn" onclick="fetchRisk()">Calculate</button>
+        </div>
+
+        <div class="risk-grid">
+            <div class="risk-input-group">
+                <label>Impact <span class="range-val" id="val-impact">3</span></label>
+                <input type="range" id="inp-impact" min="1" max="5" value="3"
+                       oninput="document.getElementById('val-impact').textContent=this.value">
+            </div>
+            <div class="risk-input-group">
+                <label>Likelihood <span class="range-val" id="val-likelihood">3</span></label>
+                <input type="range" id="inp-likelihood" min="1" max="5" value="3"
+                       oninput="document.getElementById('val-likelihood').textContent=this.value">
+            </div>
+            <div class="risk-input-group">
+                <label>Detectability <span class="range-val" id="val-detectability">3</span></label>
+                <input type="range" id="inp-detectability" min="1" max="5" value="3"
+                       oninput="document.getElementById('val-detectability').textContent=this.value">
+            </div>
+            <div class="risk-input-group">
+                <label>Control Strength <span class="range-val" id="val-control">3</span></label>
+                <input type="range" id="inp-control" min="1" max="5" value="3"
+                       oninput="document.getElementById('val-control').textContent=this.value">
+            </div>
+        </div>
+
+        <div id="risk-alert"></div>
+
+        <div id="risk-result" class="risk-result" style="display:none;">
+            <div class="risk-score-big" id="risk-score-val">—</div>
+            <div>
+                <div class="risk-level-label">Level: <strong id="risk-level-val">—</strong></div>
+                <div style="font-size:0.82em;color:#95a5a6;margin-top:4px;" id="risk-trace"></div>
+            </div>
+            <div style="margin-left:auto;" id="risk-status-badge"></div>
+        </div>
+    </div>
+
+    <!-- ── Audit Log ─────────────────────────────────────────── -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Audit Log</h2>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <label style="font-size:0.85em;color:#555;">
+                    Limit:
+                    <select id="limit-sel" style="margin-left:4px;padding:4px 8px;border:1px solid #ccc;border-radius:4px;font-size:0.9em;">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50" selected>50</option>
+                        <option value="100">100</option>
+                    </select>
+                </label>
+                <button class="btn-secondary" id="add-event-btn" onclick="postSampleEvent()">+ Add Sample Event</button>
+                <button class="btn-secondary" onclick="fetchEvents()">↻ Reload</button>
+            </div>
+        </div>
+
+        <div id="events-alert"></div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Event</th>
+                        <th>Actor</th>
+                        <th>Created At</th>
+                        <th>Details</th>
+                        <th>Trace ID</th>
+                    </tr>
+                </thead>
+                <tbody id="events-tbody">
+                    <tr><td colspan="6" style="text-align:center;color:#aaa;padding:24px;">No data loaded.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div><!-- /container -->
+
+<footer>
+    <p>RZ1 Governance Dashboard | <a href="https://github.com/AnuarRazii/ethical-ai-my">Ethical AI MY</a></p>
+</footer>
+
+<script>
+/* ── Helpers ─────────────────────────────────────────────────── */
+function apiBase() {
+    return document.getElementById('api-base').value.replace(/\/$/, '');
+}
+
+function shortId(id) {
+    return id ? id.substring(0, 8) + '…' : '—';
+}
+
+function fmtDate(ts) {
+    if (!ts) return '—';
+    const d = new Date(ts);
+    return isNaN(d) ? ts : d.toLocaleString();
+}
+
+function setAlert(containerId, type, msg) {
+    const el = document.getElementById(containerId);
+    if (!msg) { el.innerHTML = ''; return; }
+    el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+}
+
+function statusBadge(status) {
+    if (!status) return '<span class="badge badge-neutral">—</span>';
+    const s = status.toLowerCase();
+    if (s === 'pass' || s === 'accepted' || s === 'ok')
+        return '<span class="badge badge-pass">PASS</span>';
+    if (s === 'fail' || s === 'rejected' || s === 'error')
+        return '<span class="badge badge-fail">FAIL</span>';
+    if (s === 'warn' || s === 'warning')
+        return '<span class="badge badge-warn">WARN</span>';
+    return `<span class="badge badge-info">${escHtml(status)}</span>`;
+}
+
+function riskBadge(level) {
+    const map = {
+        low: 'badge-pass', moderate: 'badge-info',
+        high: 'badge-warn', very_high: 'badge-warn', critical: 'badge-fail'
+    };
+    const cls = map[level] || 'badge-neutral';
+    const pass = (level === 'low' || level === 'moderate');
+    const label = pass ? 'PASS' : 'FAIL';
+    return `<span class="badge ${cls}">${label} — ${level ? level.replace('_', ' ').toUpperCase() : '—'}</span>`;
+}
+
+function escHtml(s) {
+    return String(s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── API status ──────────────────────────────────────────────── */
+async function checkApiStatus() {
+    const badge = document.getElementById('api-status-badge');
+    badge.className = 'badge badge-neutral';
+    badge.textContent = '● Checking…';
+    try {
+        const r = await fetch(apiBase() + '/health', { signal: AbortSignal.timeout(3000) });
+        if (r.ok) {
+            badge.className = 'badge badge-pass';
+            badge.textContent = '● API Online';
+            return true;
+        }
+    } catch (_) { /* fall through */ }
+    badge.className = 'badge badge-fail';
+    badge.textContent = '● API Offline';
+    return false;
+}
+
+/* ── Fetch audit events ──────────────────────────────────────── */
+async function fetchEvents() {
+    const limit = document.getElementById('limit-sel').value;
+    setAlert('events-alert', 'info', '<span class="spinner"></span> Loading events…');
+    try {
+        const r = await fetch(`${apiBase()}/audit/events?limit=${limit}`, {
+            signal: AbortSignal.timeout(5000)
+        });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const json = await r.json();
+        const events = (json.data && json.data.events) ? json.data.events : [];
+        renderEvents(events);
+        updateSummaryTiles(events);
+        setAlert('events-alert', 'success',
+            `✔ Loaded ${events.length} event(s) — ${fmtDate(json.generated_at)}`);
+        document.getElementById('demo-notice').style.display = 'none';
+    } catch (e) {
+        setAlert('events-alert', 'error',
+            `⚠ Could not reach API: <strong>${escHtml(e.message)}</strong>. ` +
+            `Start the server with <code>python api/audit_api.py</code> or click <em>Demo Mode</em>.`);
+    }
+}
+
+function renderEvents(events) {
+    const tbody = document.getElementById('events-tbody');
+    if (!events.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:24px;">No events recorded yet.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = events.slice().reverse().map(ev => {
+        const details = ev.details && Object.keys(ev.details).length
+            ? JSON.stringify(ev.details) : '—';
+        return `<tr>
+            <td>${statusBadge(ev.status)}</td>
+            <td>${escHtml(ev.event || '—')}</td>
+            <td>${escHtml(ev.actor || '—')}</td>
+            <td style="white-space:nowrap">${fmtDate(ev.created_at)}</td>
+            <td><div class="event-details" title="${escHtml(details)}">${escHtml(details)}</div></td>
+            <td style="font-family:monospace;font-size:0.82em">${shortId(ev.trace_id)}</td>
+        </tr>`;
+    }).join('');
+}
+
+function updateSummaryTiles(events) {
+    document.getElementById('tile-total').textContent = events.length;
+    const passes = events.filter(e => {
+        const s = (e.status || '').toLowerCase();
+        return s === 'pass' || s === 'accepted' || s === 'ok';
+    }).length;
+    const fails = events.filter(e => {
+        const s = (e.status || '').toLowerCase();
+        return s === 'fail' || s === 'rejected' || s === 'error';
+    }).length;
+    document.getElementById('tile-pass').textContent = passes;
+    document.getElementById('tile-fail').textContent = fails;
+}
+
+/* ── Risk score ──────────────────────────────────────────────── */
+async function fetchRisk() {
+    const btn = document.getElementById('risk-btn');
+    btn.disabled = true;
+    btn.textContent = 'Calculating…';
+    setAlert('risk-alert', 'info', '<span class="spinner"></span> Fetching risk score…');
+    document.getElementById('risk-result').style.display = 'none';
+
+    const payload = {
+        impact:           parseInt(document.getElementById('inp-impact').value),
+        likelihood:       parseInt(document.getElementById('inp-likelihood').value),
+        detectability:    parseInt(document.getElementById('inp-detectability').value),
+        control_strength: parseInt(document.getElementById('inp-control').value)
+    };
+
+    try {
+        const r = await fetch(`${apiBase()}/risk/score`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(5000)
+        });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const json = await r.json();
+        const risk = json.data && json.data.risk ? json.data.risk : null;
+        if (!risk) throw new Error('Unexpected response format');
+        renderRisk(risk);
+        setAlert('risk-alert', '');
+    } catch (e) {
+        setAlert('risk-alert', 'error',
+            `⚠ Risk API error: <strong>${escHtml(e.message)}</strong>`);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Calculate';
+    }
+}
+
+function renderRisk(risk) {
+    const scoreEl = document.getElementById('risk-score-val');
+    scoreEl.textContent = risk.risk_score;
+    scoreEl.className = `risk-score-big ${risk.risk_level || ''}`;
+    document.getElementById('risk-level-val').textContent = (risk.risk_level || '—').replace('_',' ');
+    document.getElementById('risk-trace').textContent = 'Trace: ' + shortId(risk.trace_id);
+    document.getElementById('risk-status-badge').innerHTML = riskBadge(risk.risk_level);
+    document.getElementById('risk-result').style.display = 'flex';
+
+    // Update summary tiles
+    document.getElementById('tile-risk').textContent = risk.risk_score;
+    const lvlEl = document.getElementById('tile-level');
+    lvlEl.textContent = (risk.risk_level || '—').replace('_',' ');
+    const levelColors = { low:'#27ae60', moderate:'#2980b9', high:'#f39c12', very_high:'#e67e22', critical:'#e74c3c' };
+    lvlEl.style.color = levelColors[risk.risk_level] || '#2c3e50';
+}
+
+/* ── Post sample event ───────────────────────────────────────── */
+async function postSampleEvent() {
+    const btn = document.getElementById('add-event-btn');
+    btn.disabled = true;
+    const sampleEvents = [
+        { event: 'model_inference', actor: 'system', status: 'accepted', details: { model: 'rz1-v1', latency_ms: 120 } },
+        { event: 'data_access',     actor: 'analyst', status: 'accepted', details: { dataset: 'public_records' } },
+        { event: 'policy_check',    actor: 'governance-engine', status: 'pass', details: { rule: 'ethics-v1' } },
+        { event: 'model_output_review', actor: 'reviewer', status: 'fail', details: { reason: 'bias_detected' } },
+        { event: 'config_change',   actor: 'admin', status: 'accepted', details: { key: 'rate_limit', value: 100 } }
+    ];
+    const payload = sampleEvents[Math.floor(Math.random() * sampleEvents.length)];
+    try {
+        const r = await fetch(`${apiBase()}/audit/events`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(5000)
+        });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        await fetchEvents();
+    } catch (e) {
+        setAlert('events-alert', 'error',
+            `⚠ Could not post event: <strong>${escHtml(e.message)}</strong>`);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+/* ── Demo mode ───────────────────────────────────────────────── */
+function loadDemo() {
+    document.getElementById('demo-notice').style.display = 'block';
+    const now = new Date().toISOString();
+    const demoEvents = [
+        { event_id: 'evt-001', event: 'model_inference', actor: 'system', status: 'accepted', created_at: now, details: { model: 'rz1-v1' }, trace_id: 'aabbccdd-0000' },
+        { event_id: 'evt-002', event: 'policy_check',    actor: 'governance-engine', status: 'pass', created_at: now, details: { rule: 'ethics-v1' }, trace_id: 'aabbccdd-0001' },
+        { event_id: 'evt-003', event: 'data_access',     actor: 'analyst', status: 'accepted', created_at: now, details: { dataset: 'public_records' }, trace_id: 'aabbccdd-0002' },
+        { event_id: 'evt-004', event: 'model_output_review', actor: 'reviewer', status: 'fail', created_at: now, details: { reason: 'bias_detected' }, trace_id: 'aabbccdd-0003' },
+        { event_id: 'evt-005', event: 'config_change',   actor: 'admin', status: 'accepted', created_at: now, details: { key: 'rate_limit' }, trace_id: 'aabbccdd-0004' }
+    ];
+    renderEvents(demoEvents);
+    updateSummaryTiles(demoEvents);
+    setAlert('events-alert', 'warn', '⚡ Showing demo data — not connected to live API.');
+
+    const demoRisk = { risk_score: 40, risk_level: 'moderate', trace_id: 'demo-trace-0000' };
+    renderRisk(demoRisk);
+
+    const badge = document.getElementById('api-status-badge');
+    badge.className = 'badge badge-warn';
+    badge.textContent = '● Demo Mode';
+}
+
+/* ── Refresh all ─────────────────────────────────────────────── */
+async function refresh() {
+    const online = await checkApiStatus();
+    if (online) {
+        await Promise.all([fetchEvents(), fetchRisk()]);
+    } else {
+        setAlert('events-alert', 'error',
+            `API not reachable at <strong>${escHtml(apiBase())}</strong>. ` +
+            `Click <em>Demo Mode</em> to view sample data.`);
+    }
+}
+
+/* ── Init ────────────────────────────────────────────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+    // Auto-load demo on GitHub Pages (no local API expected)
+    const isGhPages = location.hostname.endsWith('github.io') || location.protocol === 'file:';
+    if (isGhPages) {
+        loadDemo();
+    } else {
+        refresh();
+    }
+});
+</script>
+</body>
+</html>

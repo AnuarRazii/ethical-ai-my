@@ -1,0 +1,138 @@
+# Repository Settings – Ethical AI MY
+# Probot Settings App Configuration
+# https://probot.github.io/apps/settings/
+#
+# This file codifies all intended repository security and governance settings.
+# Install the GitHub Settings App (https://github.com/apps/settings) to
+# apply these settings automatically on every push to main.
+#
+# Framework: ONSA 2025 | CPC | RMC (MCMC, eff. 1 Jun 2026)
+# Version: 1.0 | Date: 2026-07-02
+
+repository:
+  # ─────────────────────────────────────────────────────────────────────────
+  # 1. DEFAULT BRANCH
+  # Requirement: Default branch must be 'main'
+  # ─────────────────────────────────────────────────────────────────────────
+  default_branch: main
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # 2. MERGE STRATEGY — Enable Rebase
+  # Requirement: Enable rebase merge to maintain clean, linear history
+  # ─────────────────────────────────────────────────────────────────────────
+  allow_rebase_merge: true
+  allow_squash_merge: true
+  allow_merge_commit: true
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # 4. ALWAYS SUGGEST UPDATING BRANCHES
+  # Requirement: Always recommend keeping PR branches up-to-date with base
+  # GitHub API field: allow_update_branch
+  # ─────────────────────────────────────────────────────────────────────────
+  allow_update_branch: true
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # 3. DEVELOPER CERTIFICATE OF ORIGIN (DCO) — Web-based Contributions
+  # Requirement: DCO sign-off required for all web-based commits
+  # GitHub API field: web_commit_signoff_required
+  # This ensures GitHub's web editor automatically includes
+  # "Signed-off-by:" in commit messages for web-based edits.
+  # ─────────────────────────────────────────────────────────────────────────
+  web_commit_signoff_required: true
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # 5. ARCHIVE SETTINGS — Git LFS Objects in Archives
+  # Requirement: Include LFS objects when downloading repository archives
+  # ─────────────────────────────────────────────────────────────────────────
+  # Note: Archive LFS inclusion is enforced via .gitattributes and
+  # documented in REPOSITORY_SETTINGS.md (UI toggle required).
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # GENERAL REPOSITORY METADATA
+  # ─────────────────────────────────────────────────────────────────────────
+  name: ethical-ai-my
+  description: >
+    Open, Auditable, Non-Mandatory Reference for Ethical AI in Malaysia.
+    Aligned with ONSA 2025, CPC, and RMC MCMC principles.
+  has_issues: true
+  has_projects: true
+  has_wiki: false
+  has_downloads: true
+  is_template: false
+  delete_branch_on_merge: true
+  allow_auto_merge: false
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LABELS — Issue and PR Classification
+# ─────────────────────────────────────────────────────────────────────────────
+labels:
+  - name: "bug"
+    color: "d73a4a"
+    description: "Something isn't working"
+  - name: "enhancement"
+    color: "0075ca"
+    description: "New feature or request"
+  - name: "ethics"
+    color: "7b2d8b"
+    description: "Ethical principle alignment"
+  - name: "governance"
+    color: "e4c200"
+    description: "Governance model or policy"
+  - name: "security"
+    color: "b60205"
+    description: "Security vulnerability or improvement"
+  - name: "compliance"
+    color: "006b75"
+    description: "Compliance and audit issues"
+  - name: "documentation"
+    color: "0052cc"
+    description: "Documentation improvements"
+  - name: "priority: critical"
+    color: "b60205"
+    description: "Requires immediate action"
+  - name: "priority: high"
+    color: "e4430a"
+    description: "High priority"
+  - name: "priority: medium"
+    color: "fbca04"
+    description: "Medium priority"
+  - name: "priority: low"
+    color: "0e8a16"
+    description: "Low priority"
+  - name: "status: under-review"
+    color: "cccccc"
+    description: "Currently under review"
+  - name: "status: approved"
+    color: "0e8a16"
+    description: "Approved for implementation"
+  - name: "status: blocked"
+    color: "b60205"
+    description: "Blocked by dependency or issue"
+  - name: "dco-missing"
+    color: "e4430a"
+    description: "DCO sign-off is missing from one or more commits"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# BRANCH PROTECTION — main branch
+# ─────────────────────────────────────────────────────────────────────────────
+branches:
+  - name: main
+    protection:
+      required_status_checks:
+        strict: true
+        contexts:
+          - "DCO Check / dco-check"
+          - "RZ1 Compliance Engine / compliance"
+          - "RZ1 Security Enforcement / security-check"
+          - "Release Immutability Guard / immutability-check"
+      enforce_admins: false
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: true
+        require_last_push_approval: true
+      restrictions: null
+      allow_force_pushes: false
+      allow_deletions: false
+      required_linear_history: false
+      required_conversation_resolution: true
