@@ -4,6 +4,46 @@
 
 ---
 
+## Hotfix: v1.0.1 — RZ1 SHA Pin Enforcement (2026-07-02)
+
+**Hotfix reference:** `hotfix/rz1-sha-pin-enforcement-audit`
+**Applied by:** Anuar Razii \<anuarrazii@outlook.my\>
+**Governance engines affected:** RZ1 Compliance Engine, RZ1 Validate, CodeQL Security Analysis, RZ1 Security Enforcement, DCO Check, Release Immutability Guard
+
+### Issue Identified
+
+All six GitHub Actions workflow files were referencing actions using version tags (`@v4`, `@v7`, `@v3`) instead of full commit SHAs. The repository enforces a policy requiring every action reference to use a pinned full-length commit SHA. This caused immediate `startup` failures across all RZ1 governance engines.
+
+**Error logged:** `The action actions/checkout@v4 is not allowed because all actions must be pinned to a full-length commit SHA.`
+
+### Affected Workflows (prior to fix)
+
+| Workflow file | Action | Tag (blocked) | SHA pin (applied) |
+|---|---|---|---|
+| `compliance.yml` | `actions/checkout` | `@v4` | `@34e114876b0b11c390a56381ad16ebd13914f8d5` |
+| `RZ1-validate.yml` | `actions/checkout` | `@v4` | `@34e114876b0b11c390a56381ad16ebd13914f8d5` |
+| `codeql.yml` | `actions/checkout` | `@v4` | `@34e114876b0b11c390a56381ad16ebd13914f8d5` |
+| `codeql.yml` | `github/codeql-action/init` | `@v3` | `@411c4c9a36b3fca4d674f06b6396b2c6d23522c6` |
+| `codeql.yml` | `github/codeql-action/analyze` | `@v3` | `@411c4c9a36b3fca4d674f06b6396b2c6d23522c6` |
+| `security.yml` | `actions/checkout` | `@v4` | `@34e114876b0b11c390a56381ad16ebd13914f8d5` |
+| `dco.yml` | `actions/checkout` | `@v4` | `@34e114876b0b11c390a56381ad16ebd13914f8d5` |
+| `dco.yml` | `actions/github-script` | `@v7` | `@f28e40c7f34bde8b3046d885e986cb6290c5673b` |
+| `release-immutability.yml` | `actions/checkout` | `@v4` | `@34e114876b0b11c390a56381ad16ebd13914f8d5` |
+| `release-immutability.yml` | `actions/github-script` | `@v7` | `@f28e40c7f34bde8b3046d885e986cb6290c5673b` |
+
+### Resolution
+
+SHA pins applied via PR #10 (merged `2026-07-02T16:21:36Z`, merge commit `083d0fbb0532babb12ec192059042fc267350f65`). All RZ1 governance engines restored to **green** status immediately after merge.
+
+### Audit Trail
+
+- **Detected at:** `d5cb904972a84211f4e3ba6f4ed2299121ca27fe` — 4 workflows failing
+- **Fixed at:** `083d0fbb0532babb12ec192059042fc267350f65` — all workflows passing
+- **Hotfix commit:** this record — confirmed by `Signed-off-by: Anuar Razii <anuarrazii@outlook.my>`
+- **Governance framework:** ONSA 2025 | CPC | RMC (MCMC, eff. 1 Jun 2026)
+
+---
+
 ## Release Summary
 
 Ethical AI MY v1.0 represents the initial comprehensive reference release for responsible and ethical AI development in Malaysia. This release includes:
