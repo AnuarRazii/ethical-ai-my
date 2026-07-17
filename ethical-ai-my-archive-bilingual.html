@@ -41,8 +41,8 @@
         </header>
 
         <div class="language-toggle">
-            <button class="active" onclick="showLanguage('en')">English</button>
-            <button onclick="showLanguage('ms')">Bahasa Melayu</button>
+            <button class="active" onclick="showLanguage('en', event)">English</button>
+            <button onclick="showLanguage('ms', event)">Bahasa Melayu</button>
         </div>
 
         <div class="section">
@@ -123,7 +123,7 @@
     </div>
 
     <script>
-        function showLanguage(lang) {
+        function showLanguage(lang, clickEvent) {
             const elements = document.querySelectorAll('.en, .ms');
             const buttons = document.querySelectorAll('.language-toggle button');
             
@@ -136,7 +136,7 @@
             });
             
             buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            clickEvent.target.classList.add('active');
         }
     </script>
 </body>
