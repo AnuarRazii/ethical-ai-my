@@ -11,9 +11,12 @@ on:
 
 permissions:
   contents: read
+  issues: write
+  pull-requests: write
 
 jobs:
   compliance:
+    name: compliance
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
