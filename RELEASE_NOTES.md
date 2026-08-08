@@ -4,6 +4,22 @@
 
 ---
 
+## Operations Update – Periodic Cross-Review Baseline
+
+This repository now maintains a recurring cross-review baseline covering core policy documents, public static pages, and release metadata.
+
+### What Was Added
+- Weekly automated cross-review through `.github/workflows/compliance.yml`
+- Cross-file consistency checks for version, release date, and core reference wording
+- Governance and README documentation defining review cadence, ownership, and follow-up expectations
+
+### Audit Outcome
+- Workflow logs provide the recurring validation record
+- Pull requests remain the mechanism for applying synchronized updates
+- `RELEASE_NOTES.md` records material maintenance updates to preserve traceability
+
+---
+
 ## Release Summary
 
 Ethical AI MY v1.0 represents the initial comprehensive reference release for responsible and ethical AI development in Malaysia. This release includes:
