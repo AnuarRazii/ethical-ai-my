@@ -61,6 +61,15 @@ jobs:
           done
           echo "✅ Required repository structure is valid"
 
+      - name: Validate security baseline
+        run: |
+          set -euo pipefail
+          if git ls-files | grep -qE '(^|/)\.env(\.[^/]*)?$|\.env$'; then
+            echo "❌ Tracked .env or .env.* file detected in repository"
+            exit 1
+          fi
+          echo "✅ No tracked .env files detected"
+
       - name: Ethical audit
         run: |
           set -euo pipefail
