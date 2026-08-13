@@ -1,0 +1,44 @@
+name: RZ1 Unified Validation Gate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  "RZ1 Unified Validation Gate":
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate repository structure
+        run: |
+          failed=0
+          for file in README.md LICENSE ETHICS.md GOVERNANCE.md SECURITY.md ATTRIBUTION.md CODE_OF_CONDUCT.md FINAL_INTENT.md; do
+            if [ ! -f "$file" ]; then
+              echo "ERROR: Missing required file: $file"
+              failed=1
+            fi
+          done
+          if [ "$failed" -eq 1 ]; then
+            exit 1
+          fi
+
+      - name: Validate ethical compliance
+        run: |
+          if ! grep -q "## Core Ethical Principles" ETHICS.md; then
+            echo "ERROR: ETHICS.md does not contain required heading '## Core Ethical Principles'"
+            exit 1
+          fi
+
+      - name: Validate security baseline
+        run: |
+          if git ls-files --error-unmatch '*.env' 2>/dev/null; then
+            echo "ERROR: Tracked .env file(s) detected"
+            exit 1
+          fi
