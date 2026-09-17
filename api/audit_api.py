@@ -13,7 +13,6 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Any, Dict, List
 from urllib.parse import parse_qs, urlparse
-
 # Allow running from repository root or from the api/ directory.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 from compliance_mapper import compute_compliance_scores  # noqa: E402
@@ -97,6 +96,7 @@ def append_event(event: Dict[str, Any]) -> None:
         handle.write(json.dumps(event) + "\n")
 
 
+def compute_risk(payload: Dict[str, Any], trace_id: str) -> Dict[str, Any]:
 def compute_risk(payload: Dict[str, Any], trace_id: str, events: List[Dict[str, Any]]) -> Dict[str, Any]:
     def clamp(value: int) -> int:
         return max(1, min(5, value))
@@ -127,7 +127,7 @@ def compute_risk(payload: Dict[str, Any], trace_id: str, events: List[Dict[str, 
         "trace_id": trace_id,
         "inputs": {
             "impact": impact,
-            "likelihood": likelihood,
+            "likelihood": likeihood,
             "detectability": detectability,
             "control_strength": control_strength,
         },
@@ -244,6 +244,7 @@ class AuditAPIHandler(BaseHTTPRequestHandler):
         if self.path == "/audit/events":
             event = build_event(payload, trace_id)
             append_event(event)
+            self._send(HTTPStatus.CREATED, {"event": event}, trace_id)
             triggered_alerts = process_and_store_event_alerts(event)
             self._send(
                 HTTPStatus.CREATED,
@@ -254,6 +255,11 @@ class AuditAPIHandler(BaseHTTPRequestHandler):
 
         if self.path == "/risk/score":
             try:
+                result = compute_risk(payload, trace_id)
+            except ValueError:
+                self._send(HTTPStatus.BAD_REQUEST, {"error": "invalid_risk_input"}, trace_id)
+                return
+            self._send(HTTPStatus.OK, {"risk": result}, trace_id)
                 events = load_events(200)
                 result = compute_risk(payload, trace_id, events)
             except ValueError:
