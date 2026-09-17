@@ -55,20 +55,28 @@ jobs:
 
           MISSING_COMMITS=()
           CHECKED=0
+          SKIPPED=0
 
           # Iterate over all commits introduced by this PR
           while IFS= read -r commit_sha; do
             [ -z "$commit_sha" ] && continue
-            CHECKED=$((CHECKED + 1))
-
             commit_msg=$(git log -1 --format="%B" "$commit_sha")
             commit_subject=$(git log -1 --format="%s" "$commit_sha")
             commit_author=$(git log -1 --format="%an <%ae>" "$commit_sha")
+            commit_author_name=$(git log -1 --format="%an" "$commit_sha")
 
             echo ""
             echo "── Commit: ${commit_sha:0:10} ──────────────────────────────"
             echo "   Subject: $commit_subject"
             echo "   Author : $commit_author"
+
+            if [[ "$commit_author_name" =~ \[bot\]$ ]]; then
+              SKIPPED=$((SKIPPED + 1))
+              echo "   DCO    : ⏭️ SKIPPED — Bot-authored commit"
+              continue
+            fi
+
+            CHECKED=$((CHECKED + 1))
 
             if echo "$commit_msg" | grep -qiE "^Signed-off-by: .+ <.+@.+>"; then
               signoff=$(echo "$commit_msg" | grep -iE "^Signed-off-by:" | head -1)
@@ -81,7 +89,7 @@ jobs:
 
           echo ""
           echo "=================================================="
-          echo " SUMMARY: Checked $CHECKED commit(s)"
+          echo " SUMMARY: Checked $CHECKED commit(s), skipped $SKIPPED bot commit(s)"
           echo "=================================================="
 
           if [ ${#MISSING_COMMITS[@]} -gt 0 ]; then
@@ -117,7 +125,7 @@ jobs:
             exit 1
           else
             echo ""
-            echo "✅ DCO CHECK PASSED — All $CHECKED commit(s) have valid sign-off"
+            echo "✅ DCO CHECK PASSED — All checked commit(s) have valid sign-off"
             echo "dco_passed=true" >> "$GITHUB_OUTPUT"
           fi
 
