@@ -103,6 +103,38 @@ Stakeholders have autonomous decision-making authority within their context, bou
 
 ---
 
+## Cross-File Review and Update Cycle
+
+To support whole-of-repository review, Ethical AI MY applies the same transparency and accountability principles across documents, static publishing assets, and release records.
+
+### Review Scope
+
+- Policy content consistency across the core Markdown documents
+- Public-reference consistency across `README.md`, `index.html`, and `ethical-ai-my-archive-bilingual.html`
+- Release metadata consistency for version and release date
+- Auditability of changes through workflow logs, pull requests, and release notes
+
+### Cadence
+
+- Automated cross-review runs weekly and on changes proposed to `main`
+- Manual review is expected whenever contributors update policy meaning, public summaries, or release metadata
+
+### Responsibilities
+
+- Maintainers review workflow outcomes and coordinate corrective updates
+- Contributors keep related files aligned within the same change set
+- Stakeholders provide feedback when inconsistencies, omissions, or outdated statements are found
+
+### Follow-Up Process
+
+1. Detect inconsistency through workflow output or stakeholder review
+2. Identify the affected source material and every public-facing copy
+3. Update all impacted files in a single auditable pull request
+4. Record material governance or reference updates in `RELEASE_NOTES.md`
+5. Re-run validation before merge and retain the workflow record as audit evidence
+
+---
+
 ## Decision-Making Framework
 
 ### For Individual Organizations
