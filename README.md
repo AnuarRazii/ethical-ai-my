@@ -168,6 +168,16 @@ RZ1 production components now include:
 
 ---
 
+## AI Architecture Skill
+
+The repository includes a reusable GitHub Copilot skill for AI and advanced-technology architecture:
+
+- [Malaysia Ethical AI & Quantum Architect](.github/skills/malaysia-ethical-ai-architect/SKILL.md) — guidance for ethical design, risk assessment, privacy, security, human oversight, traceability, and evidence-based compliance claims.
+
+The skill is an engineering aid, not a certification, legal opinion, government endorsement, or substitute for human review.
+
+---
+
 ## Getting Started
 
 ### For Developers
