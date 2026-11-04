@@ -26,6 +26,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Validate skill metadata and mandatory sections
         shell: bash
@@ -48,7 +50,7 @@ jobs:
           front = parts[1]
           body = parts[2]
           for key in ("name", "description"):
-              if not re.search(rf"(?m)^{key}:\\s*\\S", front):
+              if not re.search(rf"(?m)^{key}:\s*\S", front):
                   raise SystemExit(f"Required front matter field missing: {key}")
           required = (
               "## Prinsip operasi",
@@ -67,4 +69,4 @@ jobs:
           PY
 
       - name: Check patch whitespace
-        run: git diff --check
+        run: git diff --check origin/main...HEAD
