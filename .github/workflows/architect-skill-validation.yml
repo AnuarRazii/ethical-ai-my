@@ -1,0 +1,70 @@
+name: Architect Skill Validation
+
+on:
+  pull_request:
+    paths:
+      - ".github/skills/malaysia-ethical-ai-architect/**"
+      - ".github/workflows/architect-skill-validation.yml"
+  push:
+    branches: [main]
+    paths:
+      - ".github/skills/malaysia-ethical-ai-architect/**"
+      - ".github/workflows/architect-skill-validation.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: architect-skill-validation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-skill:
+    name: Validate Architect Skill
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate skill metadata and mandatory sections
+        shell: bash
+        run: |
+          set -euo pipefail
+          file=".github/skills/malaysia-ethical-ai-architect/SKILL.md"
+          test -s "$file" || { echo "::error::SKILL.md is missing or empty"; exit 1; }
+          python - "$file" <<'PY'
+          import pathlib
+          import re
+          import sys
+
+          path = pathlib.Path(sys.argv[1])
+          text = path.read_text(encoding="utf-8")
+          if not text.startswith("---\n"):
+              raise SystemExit("Missing YAML front matter opening delimiter")
+          parts = text.split("---", 2)
+          if len(parts) != 3:
+              raise SystemExit("Malformed YAML front matter")
+          front = parts[1]
+          body = parts[2]
+          for key in ("name", "description"):
+              if not re.search(rf"(?m)^{key}:\\s*\\S", front):
+                  raise SystemExit(f"Required front matter field missing: {key}")
+          required = (
+              "## Prinsip operasi",
+              "## Hierarki sumber dan tuntutan pematuhan",
+              "## Aliran kerja wajib",
+              "## GitHub dan tadbir urus repositori",
+              "## Had kuasa ejen",
+              "## Kriteria penerimaan",
+          )
+          missing = [heading for heading in required if heading not in body]
+          if missing:
+              raise SystemExit("Required sections missing: " + ", ".join(missing))
+          if len(text.splitlines()) < 100:
+              raise SystemExit("Skill appears incomplete (fewer than 100 lines)")
+          print(f"Validated {path}: metadata and {len(required)} required sections present.")
+          PY
+
+      - name: Check patch whitespace
+        run: git diff --check
