@@ -107,6 +107,13 @@ Guidelines for participation:
 - Intellectual property recognition
 - Historical record maintenance
 
+### 6. **AUDIT_TRANSPARENCY.md** – Cross-Audit Transparency Layer
+- Layered Audit Architecture (APDP 2010 compliance)
+- Data Provenance Transparency
+- User-Control Governance (Right to Access & Erasure)
+- Zero-Knowledge & Local Processing
+- JPDP regulatory readiness
+
 ---
 
 ## Supplementary Documents
@@ -127,6 +134,7 @@ ethical-ai-my/
 ├── GOVERNANCE.md
 ├── SECURITY.md
 ├── ATTRIBUTION.md
+├── AUDIT_TRANSPARENCY.md
 ├── CODE_OF_CONDUCT.md
 ├── FINAL_INTENT.md
 ├── ethical-ai-my-archive-bilingual.html
@@ -144,6 +152,35 @@ ethical-ai-my/
     └── ISSUE_TEMPLATE/
         ├── bug_report.md
         └── feature_request.md
+```
+
+### Application Scaffold (Cross-Audit Transparency Layer Prototype)
+
+```
+ethical-ai-my/
+├── app/
+│   ├── main.py
+│   ├── core/
+│   │   ├── config.py
+│   │   ├── security.py
+│   ├── audit/
+│   │   ├── logger.py
+│   │   ├── models.py
+│   │   ├── hash_chain.py
+│   ├── consent/
+│   │   ├── registry.py
+│   │   ├── models.py
+│   ├── api/
+│   │   ├── routes/
+│   │   │   ├── audit.py
+│   │   │   ├── consent.py
+│   └── middleware/
+│       ├── audit_middleware.py
+├── data/
+│   ├── audit_logs.jsonl
+├── tests/
+├── requirements.txt
+└── README.md
 ```
 
 ---
