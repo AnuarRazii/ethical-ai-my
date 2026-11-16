@@ -13,7 +13,7 @@ name: Release Immutability Guard
 
 on:
   release:
-    types: [edited, deleted, unpublished]
+    types: [published, edited, deleted, unpublished]
   delete:
     # Triggered when a tag is deleted
 
